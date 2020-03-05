@@ -7,6 +7,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
   fetchData ('https://rickandmortyapi.com/api/character/')
 
+  let loadButton = document.querySelector('.load-more')
+  loadButton.addEventListener('click', () => {
+    loadButton.innerText = 'loading...'
+    loadButton.setAttribute('disabled', 'true')
+    fetchData(info.next)
+  })  
+
   function renderList(data) {
     rawData = data
     list = [ ...list, ...rawData.results ]
@@ -40,6 +47,9 @@ window.addEventListener('DOMContentLoaded', () => {
       listItem.addEventListener('click', e => showModal(i, e))
       listContainer.appendChild(listItem)
     })
+
+    loadButton.innerText = 'Load More'
+    loadButton.removeAttribute('disabled')
   }
 
   function fetchData (url) {
@@ -54,7 +64,8 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(json => {
       renderList(json)
       document.querySelector('.progress').style.transform = `translateX(${ list.length / (120 * 0.01) }%)`
-      if (list.length < 120){
+      if (!info.next.length) loadButton.remove()
+      if (list.length < 120) {
         fetchData (info.next)
       } else {
         setTimeout(() => {
@@ -66,7 +77,17 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function showModal (id, e) {
-    console.log(id)
+    let char = list[id]
+
+    document.querySelector('.window-title').innerText = char.name
+    document.querySelector('.char-name').innerText = char.name
+    document.querySelector('.status').innerText = char.status
+    document.querySelector('.species').innerText = char.species
+    document.querySelector('.gender').innerText = char.gender
+    document.querySelector('.origin').innerText = char.origin.name
+    
+    document.querySelector('.avatar-img').setAttribute('src', char.image)
+
     document.querySelector('#modal').classList.remove('hide')
   }
 
