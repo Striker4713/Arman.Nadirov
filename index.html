@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="style.css" >
+  <link rel="stylesheet" type="text/css" href="./style.css" >
   <title>Rick and Morty info</title>
 </head>
 <body>
@@ -37,7 +37,7 @@
   
     <div class="modal hide" id="modal">
       <div class="modal-title">
-        <div>{{ Window Title }}</div>
+        <div class="window-title">{{ Window Title }}</div>
         <div id="hide-modal">
           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
             viewBox="0 0 512.001 512.001" >
@@ -51,14 +51,14 @@
       </div>
       <div class="modal-body">
         <div class="avatar">
-          <img src="https://rickandmortyapi.com/api/character/avatar/1.jpeg" alt="">
+          <img class="avatar-img" src="https://rickandmortyapi.com/api/character/avatar/1.jpeg" alt="">
         </div>
         <div class="description">
-          <h2>Rick Sanchez</h2>
-          <p><b>status</b>: Alive</p>
-          <p><b>species</b>: Human</p>
-          <p><b>gender</b>: Male</p>
-          <p><b>origin</b>: Earth</p>
+          <h2 class="char-name">Rick Sanchez</h2>
+          <p><b>status</b>: <span class="status">Alive</span></p>
+          <p><b>species</b>: <span class="species">Human</span></p>
+          <p><b>gender</b>: <span class="gender">Male</span></p>
+          <p><b>origin</b>: <span class="origin">Earth</span></p>
         </div>
       </div>
 
