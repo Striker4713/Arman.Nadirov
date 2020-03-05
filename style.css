@@ -26,8 +26,10 @@ html, body {
 header {
   font-size: 2rem;
   padding: 5rem 2rem;
-  background: var(--color5);
+  background: url('./images/header.png') top right no-repeat var(--color5);
+  background-size: contain;
   color: #fff;
+  border-bottom: 4px solid var(--color4);
 }
 
 section {
@@ -95,6 +97,9 @@ section {
   box-shadow: 0 0 12px 5px rgba(0,0,0,0.4);
   box-sizing: border-box;
   border: 2px solid var(--color2);
+}
+
+.modal.hide {
   display: none;
 }
 
@@ -126,6 +131,32 @@ section {
 }
 footer {
   padding: 5rem 2rem;
-  background: var(--color5);
+  background: url('./images/footer.png') 75% -10% no-repeat var(--color5);
+  background-size: auto 175%;
   color: #fff;
+}
+
+.preloader {
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.progress-bar {
+  position: relative;
+  width: 100%;
+  height: 2rem;
+  box-sizing: border-box;
+  border: 2px solid var(--color4);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: -100%;
+  background: var(--color4);
+  transition: transform 200ms ease-out;
 }
