@@ -26,7 +26,7 @@ html, body {
 header {
   font-size: 2rem;
   padding: 5rem 2rem;
-  background: url('images/header.png') top right no-repeat var(--color5);
+  background: url('./images/header.png') top right no-repeat var(--color5);
   background-size: contain;
   color: #fff;
   border-bottom: 4px solid var(--color4);
@@ -131,7 +131,7 @@ section {
 }
 footer {
   padding: 5rem 2rem;
-  background: url('images/footer.png') 75% -10% no-repeat var(--color5);
+  background: url('./images/footer.png') 75% -10% no-repeat var(--color5);
   background-size: auto 175%;
   color: #fff;
 }
