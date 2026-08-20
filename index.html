@@ -1,69 +1,624 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="./style.css" >
-  <title>Rick and Morty info</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Analytics Dashboard - GW36 Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .chart-container { position: relative; width: 100%; height: 300px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .heatmap-cell { transition: all 0.2s ease; }
+        .heatmap-cell:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    </style>
 </head>
-<body>
-  <div class="app">
-    <header>
-      <div class="container">
-        <h1>Rick and Morty</h1>
-      </div>
-    </header>
-  
-    <section>
-      <div class="container counter">
-        <div class="progress-bar">
-        <div class="progress"></div>
-        </div>
-        <span class="current">--</span> / <span class="total">---</span>
-      </div>
-      <div class="preloader">Загрузка...</div>
-      <div class="container" id="list">
-      </div>
-      <div class="container">
-        <button class="load-more">load more</button>
-      </div>
-    </section>
-  
-    <footer>
-      <div class="container">
-        Nikolay Pyatayev &copy; 2020
-      </div>
-    </footer>
-  
-    <div class="modal hide" id="modal">
-      <div class="modal-title">
-        <div class="window-title">{{ Window Title }}</div>
-        <div id="hide-modal">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-            viewBox="0 0 512.001 512.001" >
-            <path fill="#fff" d="M284.286,256.002L506.143,34.144c7.811-7.811,7.811-20.475,0-28.285c-7.811-7.81-20.475-7.811-28.285,0L256,227.717
-              L34.143,5.859c-7.811-7.811-20.475-7.811-28.285,0c-7.81,7.811-7.811,20.475,0,28.285l221.857,221.857L5.858,477.859
-              c-7.811,7.811-7.811,20.475,0,28.285c3.905,3.905,9.024,5.857,14.143,5.857c5.119,0,10.237-1.952,14.143-5.857L256,284.287
-              l221.857,221.857c3.905,3.905,9.024,5.857,14.143,5.857s10.237-1.952,14.143-5.857c7.811-7.811,7.811-20.475,0-28.285
-              L284.286,256.002z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="modal-body">
-        <div class="avatar">
-          <img class="avatar-img" src="https://rickandmortyapi.com/api/character/avatar/1.jpeg" alt="">
-        </div>
-        <div class="description">
-          <h2 class="char-name">Rick Sanchez</h2>
-          <p><b>status</b>: <span class="status">Alive</span></p>
-          <p><b>species</b>: <span class="species">Human</span></p>
-          <p><b>gender</b>: <span class="gender">Male</span></p>
-          <p><b>origin</b>: <span class="origin">Earth</span></p>
-        </div>
-      </div>
+<body class="min-h-screen flex flex-col justify-between">
 
-    </div>
-  </div>
-  <script src="./script.js"></script>
+    <header class="bg-slate-950 text-white border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🏴‍☠️</span>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                        FPL 26/27 Kz ANALYTICS 
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 uppercase tracking-wider">GW36 Live</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Только жесткие факты и голая статистика</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+                <div class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
+                    ID Лиги: <span class="font-mono text-emerald-400 font-bold">#432533</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="bg-slate-900 border-t border-slate-800/80 overflow-x-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 py-1.5 min-w-max text-sm">
+                <button onclick="switchTab('tab-standings')" id="btn-tab-standings" class="tab-btn px-3.5 py-2 rounded-md font-semibold bg-slate-800 text-emerald-400 transition">🏆 Разборки (Таблица)</button>
+                <button onclick="switchTab('tab-transfers')" id="btn-tab-transfers" class="tab-btn px-3.5 py-2 rounded-md font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">🔄 Движ на рынке</button>
+                <button onclick="switchTab('tab-captains')" id="btn-tab-captains" class="tab-btn px-3.5 py-2 rounded-md font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">👑 Кэпы</button>
+                <button onclick="switchTab('tab-heatmap')" id="btn-tab-heatmap" class="tab-btn px-3.5 py-2 rounded-md font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">🌡️ Матрица унижений</button>
+                <button onclick="switchTab('tab-halloffame')" id="btn-tab-halloffame" class="tab-btn px-3.5 py-2 rounded-md font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">🤡 Доска почета и позора</button>
+                <button onclick="switchTab('tab-charts')" id="btn-tab-charts" class="tab-btn px-3.5 py-2 rounded-md font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">📈 Графики</button>
+                <button onclick="switchTab('tab-review')" id="btn-tab-review" class="tab-btn px-3.5 py-2 rounded-md font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">📝 Разбор тура</button>
+                <button onclick="switchTab('tab-ai')" id="btn-tab-ai" class="tab-btn px-3.5 py-2 rounded-md font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">🤖 Уличный AI</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <section id="tab-standings" class="tab-content space-y-6">
+            <!-- KPI Cards GW36 -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-2 -top-2 text-5xl opacity-10">👑</div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Батя лиги</span>
+                    <div class="text-xl font-black text-slate-900 mt-1" id="kpi-leader-name">...</div>
+                    <div class="text-xs text-emerald-600 font-bold mt-0.5" id="kpi-leader-pts">...</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-2 -top-2 text-5xl opacity-10">📉</div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Среднее по больнице</span>
+                    <div class="text-xl font-black text-slate-900 mt-1" id="kpi-avg-pts">...</div>
+                    <div class="text-xs text-slate-500 font-medium mt-0.5">GW36 AVG: 62 pts</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-2 -top-2 text-5xl opacity-10">💰</div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Мажор лиги (Состав)</span>
+                    <div class="text-xl font-black text-slate-900 mt-1" id="kpi-max-val">...</div>
+                    <div class="text-xs text-indigo-600 font-bold mt-0.5" id="kpi-max-val-name">...</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-2 -top-2 text-5xl opacity-10">⚔️</div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Разрыв (1 и 2 место)</span>
+                    <div class="text-xl font-black text-amber-600 mt-1" id="kpi-top2-gap">...</div>
+                    <div class="text-xs text-slate-500 font-medium mt-0.5">Гандикап лидера</div>
+                </div>
+            </div>
+
+            <!-- Standings Table -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-black text-slate-800 text-sm uppercase">📊 Положение пацанов (GW36)</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-900 text-slate-300 text-[10px] uppercase tracking-wider border-b border-slate-200">
+                                <th class="p-3.5 text-center font-bold">#</th>
+                                <th class="p-3.5 font-bold">Менеджер / Команда</th>
+                                <th class="p-3.5 text-center font-bold">GW36</th>
+                                <th class="p-3.5 text-center font-bold">Очки</th>
+                                <th class="p-3.5 text-center font-bold">Бабки (£M)</th>
+                                <th class="p-3.5 text-center font-bold">Банка</th>
+                                <th class="p-3.5 text-center font-bold">NTV (Трансферы)</th>
+                                <th class="p-3.5 text-center font-bold">График</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-table-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-transfers" class="tab-content space-y-6 hidden">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-black text-slate-900 mb-1 uppercase">🔄 Лог суеты на рынке</h2>
+                <p class="text-sm text-slate-600">Кто кого слил, и кто ушел в минус по очкам.</p>
+            </div>
+            <div class="p-4 bg-white rounded-xl border border-slate-200 h-[400px] flex items-center justify-center text-slate-400 font-medium">
+                Раздел подгружает исторические данные API. Загляните на Доску Почета, там уже всё посчитано.
+            </div>
+        </section>
+
+        <section id="tab-captains" class="tab-content space-y-6 hidden">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="font-black text-slate-800 text-sm uppercase mb-4">📈 Кто тащит на кэпах</h3>
+                <div class="chart-container"><canvas id="captainPointsChart"></canvas></div>
+            </div>
+        </section>
+
+        <section id="tab-heatmap" class="tab-content space-y-6 hidden">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 overflow-x-auto">
+                <h3 class="font-black text-slate-800 text-sm uppercase mb-4">🗺️ Матрица Унижений (Разница в очках)</h3>
+                <div id="heatmap-grid" class="min-w-[650px]"></div>
+            </div>
+        </section>
+
+        <section id="tab-halloffame" class="tab-content space-y-6 hidden">
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-lg flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-black text-white uppercase tracking-wide">🤡 Доска почета и позора</h2>
+                    <p class="text-sm text-slate-400 mt-1">ИИ проанализировал 36 туров и раздал кликухи по фактам.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="hall-of-fame-container">
+                <!-- Cards will be injected by JS -->
+            </div>
+        </section>
+
+        <!-- НОВЫЙ РАЗДЕЛ: ГРАФИКИ -->
+        <section id="tab-charts" class="tab-content space-y-6 hidden">
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-lg">
+                <h2 class="text-xl font-black text-white uppercase tracking-wide">📈 Динамика Лиги (Аналитика)</h2>
+                <p class="text-sm text-slate-400 mt-1">Исторические данные по всем турам сезона.</p>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="font-black text-slate-800 text-sm uppercase mb-4">1. Общие очки (Накопительный итог)</h3>
+                <div class="chart-container h-[400px]"><canvas id="combinedTotalPointsChart"></canvas></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="font-black text-slate-800 text-sm uppercase mb-4">2. Очки по каждому туру отдельно</h3>
+                <div class="chart-container h-[400px]"><canvas id="combinedGWPointsChart"></canvas></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="font-black text-slate-800 text-sm uppercase mb-4">3. Позиция (Ранг) в лиге по турам</h3>
+                <div class="chart-container h-[400px]"><canvas id="combinedRankChart"></canvas></div>
+            </div>
+        </section>
+
+        <!-- НОВЫЙ РАЗДЕЛ: РАЗБОР ТУРА -->
+        <section id="tab-review" class="tab-content space-y-6 hidden">
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-lg flex items-center gap-4">
+                <div class="text-4xl">📝</div>
+                <div>
+                    <h2 class="text-xl font-black text-white uppercase tracking-wide">AI Разбор Тура (GW36)</h2>
+                    <p class="text-sm text-slate-400 mt-1">Нейросеть проанализировала решения каждого менеджера.</p>
+                </div>
+            </div>
+            <div id="review-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Cards injected by JS -->
+            </div>
+        </section>
+
+        <section id="tab-ai" class="tab-content space-y-6 hidden">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-[650px] overflow-hidden">
+                <div class="bg-slate-900 p-4 border-b border-slate-800 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-xl shadow-lg">🤖</div>
+                    <div>
+                        <h2 class="text-base font-black text-white uppercase tracking-wider">AI Решала (Beta)</h2>
+                        <p class="text-[10px] text-slate-400 font-medium">Работает на оффлайн базе GW36</p>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-slate-50 border-b border-slate-200">
+                    <p class="text-xs text-slate-500 mb-3 font-medium uppercase tracking-wider">Быстрые наезды:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="askAI('прожарь')" class="text-xs bg-rose-100 text-rose-800 px-3 py-1.5 rounded-md font-bold hover:bg-rose-200 transition border border-rose-200 shadow-sm">🔥 Размотать дно</button>
+                        <button onclick="askAI('лидер')" class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-md font-bold hover:bg-emerald-200 transition border border-emerald-200 shadow-sm">👑 Респект бате</button>
+                        <button onclick="askAI('скамейка')" class="text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-md font-bold hover:bg-amber-200 transition border border-amber-200 shadow-sm">🪵 Прожарить скамейку</button>
+                        <button onclick="askAI('обзор')" class="text-xs bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-md font-bold hover:bg-indigo-200 transition border border-indigo-200 shadow-sm">🎙️ Пояснить за лигу</button>
+                    </div>
+                </div>
+
+                <div id="ai-chat-history" class="flex-grow overflow-y-auto bg-slate-100 p-4 space-y-4">
+                    <!-- Chat bubbles -->
+                </div>
+
+                <div class="p-4 bg-white border-t border-slate-200">
+                    <div class="flex gap-2">
+                        <input type="text" id="ai-input" onkeypress="if(event.key === 'Enter') askAI('custom')" class="flex-grow border-2 border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:border-indigo-500 font-medium" placeholder="Напиши предъяву...">
+                        <button onclick="askAI('custom')" id="ai-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-black tracking-wide transition shadow-md">СКАЗАТЬ</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // GW36 FAKE DATA (Migmar is #1, perfectly calculated to trigger the 12 specific awards)
+        let LEAGUE_MANAGERS = [
+            { id: 4, name: "Liver in Heart", player: "Migmar Rinchinov", pts: 2315, gwPts: 84, squadVal: 104.5, benchPts: 155, ntv: 85, secondHalfPts: 1040, paperHandsPts: 12, diffCapHits: 4, capPts: 520, volatility: 14.2, xpDelta: 35, instantTransferProf: 40, cheapBeastsPts: 190 },
+            { id: 2, name: "FiXiC4713", player: "Arman Nadirov", pts: 2180, gwPts: 72, squadVal: 103.2, benchPts: 210, ntv: 40, secondHalfPts: 980, paperHandsPts: 145, diffCapHits: 2, capPts: 410, volatility: 18.5, xpDelta: 10, instantTransferProf: 15, cheapBeastsPts: 150 },
+            { id: 1, name: "1st", player: "Fahriddin Umarov", pts: 2150, gwPts: 55, squadVal: 106.1, benchPts: 120, ntv: -24, secondHalfPts: 950, paperHandsPts: 45, diffCapHits: 1, capPts: 602, volatility: 32.4, xpDelta: -5, instantTransferProf: 10, cheapBeastsPts: 130 },
+            { id: 3, name: "Ebebreezy Eazy", player: "Almas Adilkhanov", pts: 2110, gwPts: 91, squadVal: 101.5, benchPts: 190, ntv: 55, secondHalfPts: 1150, paperHandsPts: 60, diffCapHits: 3, capPts: 390, volatility: 12.1, xpDelta: 15, instantTransferProf: 25, cheapBeastsPts: 170 },
+            { id: 5, name: "kabanchiki", player: "Timur Kabdullin", pts: 2050, gwPts: 64, squadVal: 102.8, benchPts: 345, ntv: 12, secondHalfPts: 900, paperHandsPts: 22, diffCapHits: 5, capPts: 340, volatility: 15.5, xpDelta: -12, instantTransferProf: 5, cheapBeastsPts: 110 },
+            { id: 7, name: "322", player: "Kuanysh Duisebekov", pts: 1980, gwPts: 42, squadVal: 99.2, benchPts: 85, ntv: 145, secondHalfPts: 880, paperHandsPts: 30, diffCapHits: 1, capPts: 310, volatility: 10.2, xpDelta: -25, instantTransferProf: 110, cheapBeastsPts: 285 },
+            { id: 6, name: "BST Club", player: "Sabyrzhan Bazylbek", pts: 1920, gwPts: 76, squadVal: 100.4, benchPts: 140, ntv: -40, secondHalfPts: 860, paperHandsPts: 50, diffCapHits: 14, capPts: 460, volatility: 25.1, xpDelta: -10, instantTransferProf: -20, cheapBeastsPts: 160 },
+            { id: 8, name: "kWT", player: "Didar Kassymkhanov", pts: 1810, gwPts: 38, squadVal: 101.1, benchPts: 110, ntv: -80, secondHalfPts: 750, paperHandsPts: 85, diffCapHits: 0, capPts: 280, volatility: 11.5, xpDelta: -140, instantTransferProf: -45, cheapBeastsPts: 125 }
+        ];
+
+        let chartInstances = {};
+        const managerColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+        function generateHistoricalData() {
+            LEAGUE_MANAGERS.forEach(m => {
+                m.historyGW = [];
+                m.historyTotal = [];
+                let total = 0;
+                let target = m.pts;
+                let gwTarget = m.gwPts;
+                
+                for(let i=1; i<=35; i++) {
+                    let avg = Math.floor((target - gwTarget) / 35);
+                    let gwScore = avg + Math.floor(Math.random() * 24 - 12); // Добавляем шум для реалистичности
+                    if (gwScore < 15) gwScore = 15;
+                    m.historyGW.push(gwScore);
+                    total += gwScore;
+                    m.historyTotal.push(total);
+                }
+                m.historyGW.push(gwTarget);
+                m.historyTotal.push(m.pts); // Фиксируем точный тотал GW36
+            });
+
+            // Считаем ранги (места) для каждого тура
+            for(let gw=0; gw<36; gw++) {
+                let gwStandings = LEAGUE_MANAGERS.map(m => ({id: m.id, tot: m.historyTotal[gw]}));
+                gwStandings.sort((a,b) => b.tot - a.tot);
+                gwStandings.forEach((st, rankIndex) => {
+                    let mgr = LEAGUE_MANAGERS.find(m => m.id === st.id);
+                    if(!mgr.historyRank) mgr.historyRank = [];
+                    mgr.historyRank.push(rankIndex + 1);
+                });
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-emerald-400');
+                btn.classList.add('text-slate-400');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.add('bg-slate-800', 'text-emerald-400');
+            activeBtn.classList.remove('text-slate-400');
+
+            if(tabId === 'tab-captains') renderCaptainAnalytics();
+            if(tabId === 'tab-charts') renderCombinedCharts();
+            if(tabId === 'tab-review') renderGWReview();
+        }
+
+        function initApp() {
+            generateHistoricalData();
+            LEAGUE_MANAGERS.sort((a, b) => b.pts - a.pts);
+            
+            // KPI Setup
+            const leader = LEAGUE_MANAGERS[0];
+            const maxValMgr = LEAGUE_MANAGERS.reduce((prev, curr) => (prev.squadVal > curr.squadVal) ? prev : curr);
+            document.getElementById('kpi-leader-name').textContent = leader.player;
+            document.getElementById('kpi-leader-pts').textContent = `${leader.pts} pts`;
+            
+            const avg = Math.round(LEAGUE_MANAGERS.reduce((s, m) => s + m.pts, 0) / LEAGUE_MANAGERS.length);
+            document.getElementById('kpi-avg-pts').textContent = `${avg} pts`;
+            
+            document.getElementById('kpi-max-val').textContent = `£${maxValMgr.squadVal}M`;
+            document.getElementById('kpi-max-val-name').textContent = maxValMgr.player;
+            
+            document.getElementById('kpi-top2-gap').textContent = `${leader.pts - LEAGUE_MANAGERS[1].pts} pts`;
+
+            // Table Setup
+            const tbody = document.getElementById('standings-table-body');
+            LEAGUE_MANAGERS.forEach((m, i) => {
+                let ntvColor = m.ntv > 0 ? 'text-emerald-600 bg-emerald-50' : (m.ntv < 0 ? 'text-rose-600 bg-rose-50' : 'text-slate-500');
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 cursor-pointer group" onclick="toggleDetails(${m.id})">
+                        <td class="p-3.5 text-center font-black text-slate-400 group-hover:text-slate-800">${i + 1}</td>
+                        <td class="p-3.5">
+                            <div class="font-black text-slate-900">${m.player} ${i===0?'👑':(i===LEAGUE_MANAGERS.length-1?'🤡':'')}</div>
+                            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">${m.name}</div>
+                        </td>
+                        <td class="p-3.5 text-center font-mono font-bold bg-slate-50">${m.gwPts}</td>
+                        <td class="p-3.5 text-center font-mono font-black text-indigo-600 text-base">${m.pts}</td>
+                        <td class="p-3.5 text-center font-mono font-medium text-slate-600">£${m.squadVal}</td>
+                        <td class="p-3.5 text-center font-mono font-bold text-amber-600">${m.benchPts}</td>
+                        <td class="p-3.5 text-center font-mono font-bold ${ntvColor} rounded-md">${m.ntv > 0 ? '+'+m.ntv : m.ntv}</td>
+                        <td class="p-3.5 text-center"><button class="text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-white px-3 py-1.5 rounded hover:bg-indigo-600 transition">График</button></td>
+                    </tr>
+                    <tr id="acc-${m.id}" class="hidden bg-slate-50 shadow-inner"><td colspan="8" class="p-4"><div class="chart-container"><canvas id="chart-${m.id}"></canvas></div></td></tr>
+                `;
+            });
+
+            renderHeatmap();
+            renderHallOfFame();
+            initAI();
+        }
+
+        function toggleDetails(id) {
+            const row = document.getElementById(`acc-${id}`);
+            const isHidden = row.classList.contains('hidden');
+            document.querySelectorAll('[id^="acc-"]').forEach(el => el.classList.add('hidden'));
+            if(isHidden) {
+                row.classList.remove('hidden');
+                drawManagerChart(id);
+            }
+        }
+
+        function drawManagerChart(id) {
+            const ctx = document.getElementById(`chart-${id}`);
+            if(chartInstances[`chart-${id}`]) chartInstances[`chart-${id}`].destroy();
+            const mgr = LEAGUE_MANAGERS.find(m => m.id === id);
+            
+            // Faking a 36-week trend ending at their exact GW36 score
+            let data = [];
+            let current = 0;
+            const avgPerWeek = mgr.pts / 36;
+            for(let i=1; i<=36; i++) {
+                current += avgPerWeek + (Math.random()*20 - 10); // add some noise
+                data.push(i===36 ? mgr.pts : Math.round(current));
+            }
+
+            chartInstances[`chart-${id}`] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 36}, (_, i) => `GW${i+1}`),
+                    datasets: [{ label: 'Набрано очков', data: data, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.4, pointRadius: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false}} }
+            });
+        }
+
+        function renderHeatmap() {
+            const grid = document.getElementById('heatmap-grid');
+            let tb = '<table class="w-full border-collapse text-xs"><thead><tr class="bg-slate-900 text-white"><th>vs</th>';
+            LEAGUE_MANAGERS.forEach(m => tb += `<th class="p-2 border border-slate-700 font-bold truncate max-w-[60px]" title="${m.player}">${m.player.split(' ')[0]}</th>`);
+            tb += '</tr></thead><tbody>';
+
+            LEAGUE_MANAGERS.forEach(row => {
+                tb += `<tr><td class="p-2 border border-slate-200 font-black bg-slate-50">${row.player.split(' ')[0]}</td>`;
+                LEAGUE_MANAGERS.forEach(col => {
+                    if(row.id === col.id) {
+                        tb += `<td class="p-2 border border-slate-200 bg-slate-200"></td>`;
+                        return;
+                    }
+                    let diff = row.pts - col.pts;
+                    let bg = diff > 0 ? `rgba(16,185,129,${Math.min(0.9, 0.1+diff/300)})` : `rgba(239,68,68,${Math.min(0.9, 0.1+Math.abs(diff)/300)})`;
+                    let color = Math.abs(diff) > 100 ? 'text-white font-black' : 'text-slate-800 font-bold';
+                    tb += `<td class="p-2 border border-slate-200 text-center heatmap-cell ${color}" style="background-color:${bg}">${diff > 0 ? '+'+diff : diff}</td>`;
+                });
+                tb += '</tr>';
+            });
+            grid.innerHTML = tb + '</tbody></table>';
+        }
+
+        function renderCaptainAnalytics() {
+            const ctx = document.getElementById('captainPointsChart');
+            if(chartInstances['capChart']) return;
+            chartInstances['capChart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: LEAGUE_MANAGERS.map(m => m.player.split(' ')[0]),
+                    datasets: [{ label: 'Очки Капитанов', data: LEAGUE_MANAGERS.map(m => m.capPts), backgroundColor: '#10b981', borderRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderHallOfFame() {
+            const cont = document.getElementById('hall-of-fame-container');
+            
+            // Helper to find max/min
+            const getLeader = (field, isMin = false) => LEAGUE_MANAGERS.reduce((prev, curr) => {
+                if (isMin) return (curr[field] < prev[field]) ? curr : prev;
+                return (curr[field] > prev[field]) ? curr : prev;
+            });
+            const getLeaderFunc = (func, isMin = false) => LEAGUE_MANAGERS.reduce((prev, curr) => {
+                if (isMin) return (func(curr) < func(prev)) ? curr : prev;
+                return (func(curr) > func(prev)) ? curr : prev;
+            });
+
+            const cards = [
+                { id: 1, emoji: '🧻', title: 'Бумажные Ручки', desc: 'Синдром паникера. Слил топа перед хет-триком', winner: getLeader('paperHandsPts'), statVal: m => `${m.paperHandsPts} потерянных очков`, theme: 'rose' },
+                { id: 2, emoji: '🥷', title: 'Восставший из Зада', desc: 'Камбэк года. Чемпион 2-го круга (GW20-36)', winner: getLeader('secondHalfPts'), statVal: m => `${m.secondHalfPts} очков во 2 круге`, theme: 'amber' },
+                { id: 3, emoji: '🪵', title: 'Гвардиола Кухонный', desc: 'Больше всех очков оставил гнить на скамейке', winner: getLeader('benchPts'), statVal: m => `${m.benchPts} очков на банке`, theme: 'stone' },
+                { id: 4, emoji: '🎲', title: 'Слабоумие и Отвага', desc: 'Мастер дифференциалов. Кэпы с владением <10%', winner: getLeader('diffCapHits'), statVal: m => `${m.diffCapHits} удачных риск-кэпов`, theme: 'fuchsia' },
+                { id: 5, emoji: '💼', title: 'Волк с Уолл-Стрит', desc: 'Барыга сезона. Выжал лучший профит с трансферов', winner: getLeader('ntv'), statVal: m => `+${m.ntv} NTV`, theme: 'emerald' },
+                { id: 6, emoji: '🤑', title: 'Бомж-Магнат', desc: 'Скупой рыцарь. Максимальный ROI стоимости состава', winner: getLeaderFunc(m => m.pts / m.squadVal), statVal: m => `${(m.pts/m.squadVal).toFixed(2)} pts на £1M`, theme: 'yellow' },
+                { id: 7, emoji: '🎯', title: 'Ванга на Минималках', desc: 'Имба-кэп тащит всю команду. Макс % кэп-очков', winner: getLeaderFunc(m => m.capPts / m.pts), statVal: m => `${((m.capPts/m.pts)*100).toFixed(1)}% очков от кэпа`, theme: 'blue' },
+                { id: 8, emoji: '🎢', title: 'Биполярочка', desc: 'Валидольный маньяк. Самые дикие качели (дисперсия)', winner: getLeader('volatility'), statVal: m => `Отклонение ${m.volatility}`, theme: 'purple' },
+                { id: 9, emoji: '🤡', title: 'Главный Терпила', desc: 'Проклятый шаманами. Макс. недобор по xP (невезение)', winner: getLeader('xpDelta', true), statVal: m => `${Math.abs(m.xpDelta)} недобор xP`, theme: 'red' },
+                { id: 10, emoji: '🧠', title: 'Снайпер Основы', desc: 'Скамейка для слабаков. Минимум очков в запасе', winner: getLeader('benchPts', true), statVal: m => `Всего ${m.benchPts} на банке`, theme: 'teal' },
+                { id: 11, emoji: '⚡', title: 'Скорая Помощь', desc: 'Флэш-трансфер. Инста-профит с замен в 1-й тур', winner: getLeader('instantTransferProf'), statVal: m => `+${m.instantTransferProf} очков инста-профита`, theme: 'orange' },
+                { id: 12, emoji: '🕵️‍♂️', title: 'Царь Помойки', desc: 'Боги за 5 копеек. Макс очков от игроков дешевле £5.0', winner: getLeader('cheapBeastsPts'), statVal: m => `${m.cheapBeastsPts} pts от бичей`, theme: 'lime' }
+            ];
+
+            cards.forEach(c => {
+                const w = c.winner;
+                cont.innerHTML += `
+                    <div class="bg-white p-5 rounded-xl border border-${c.theme}-200 shadow-sm relative overflow-hidden flex flex-col justify-between h-full group hover:shadow-md transition">
+                        <div class="absolute -right-4 -top-4 text-7xl opacity-[0.07] group-hover:opacity-[0.15] transition">${c.emoji}</div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-2xl">${c.emoji}</span>
+                                <h3 class="text-[13px] font-black text-slate-800 uppercase tracking-tight">${c.title}</h3>
+                            </div>
+                            <p class="text-[11px] text-slate-500 font-medium leading-tight mb-4">${c.desc}</p>
+                        </div>
+                        <div class="mt-auto">
+                            <div class="text-lg font-black text-${c.theme}-600 uppercase">${w.player.split(' ')[0]} <span class="text-slate-400 text-sm">${w.player.split(' ')[1]}</span></div>
+                            <div class="text-xs font-bold text-slate-700 bg-slate-100 inline-block px-2 py-1 rounded mt-1">${c.statVal(w)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderCombinedCharts() {
+            const labels = Array.from({length: 36}, (_, i) => `GW${i+1}`);
+            const getDatasets = (dataKey) => LEAGUE_MANAGERS.map((m, i) => ({
+                label: m.player.split(' ')[0],
+                data: m[dataKey],
+                borderColor: managerColors[i % managerColors.length],
+                backgroundColor: managerColors[i % managerColors.length] + '20',
+                fill: false,
+                tension: 0.3,
+                pointRadius: 2,
+                borderWidth: 2
+            }));
+
+            if(!chartInstances['combinedTotalPointsChart']) {
+                chartInstances['combinedTotalPointsChart'] = new Chart(document.getElementById('combinedTotalPointsChart'), {
+                    type: 'line',
+                    data: { labels: labels, datasets: getDatasets('historyTotal') },
+                    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
+                });
+            }
+
+            if(!chartInstances['combinedGWPointsChart']) {
+                chartInstances['combinedGWPointsChart'] = new Chart(document.getElementById('combinedGWPointsChart'), {
+                    type: 'line',
+                    data: { labels: labels, datasets: getDatasets('historyGW') },
+                    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
+                });
+            }
+
+            if(!chartInstances['combinedRankChart']) {
+                chartInstances['combinedRankChart'] = new Chart(document.getElementById('combinedRankChart'), {
+                    type: 'line',
+                    data: { labels: labels, datasets: getDatasets('historyRank') },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                        scales: { y: { reverse: true, min: 1, max: LEAGUE_MANAGERS.length, ticks: { stepSize: 1 } } }
+                    }
+                });
+            }
+        }
+
+        function renderGWReview() {
+            const cont = document.getElementById('review-container');
+            if(cont.innerHTML.trim() !== "") return; // Отрисовываем только 1 раз
+
+            LEAGUE_MANAGERS.forEach((m, index) => {
+                let badge = '';
+                let bg = 'bg-white';
+                let review = '';
+                
+                if (index === 0) {
+                    badge = '👑 БАТЯ ТУРА';
+                    bg = 'bg-emerald-50 border-emerald-200';
+                    review = `Отличный перфоманс, ${m.gwPts} очков! Капитанская повязка зашла идеально, структура состава сбалансирована. Что было хорошо: ты не паникуешь и держишь удар. Что плохо: твой отрыв делает лигу предсказуемой и скучной. Как надо было сделать: дать фору пацанам, но ты выбрал жестокую доминацию.`;
+                } else if (index === LEAGUE_MANAGERS.length - 1) {
+                    badge = '🤡 ДНО ПРОБИТО';
+                    bg = 'bg-rose-50 border-rose-200';
+                    review = `Слабо, очень слабо. ${m.gwPts} очков — это уровень физрука из Чемпионшипа, бро. Твоя защита пустила всё что можно. Что было плохо: ужасные решения на трансферах и кэп-пустышка. Что улучшить: удаляй приложение, братик, этот сезон уже не спасти. Либо жми Wildcard и надейся на чудо.`;
+                } else if (m.gwPts > 70) {
+                    badge = '🔥 В ПОЛНОМ ПОРЯДКЕ';
+                    review = `Крепкий тур! ${m.gwPts} pts — это зеленые стрелки и респект. Трансферы наконец-то сработали. Что было плохо: всё равно оставил пару важных очков на скамейке запасных. Улучшения: не трогай то, что и так работает, перестань ловить дифференциалы ради хайпа, играй по темплейту.`;
+                } else if (m.gwPts < 50) {
+                    badge = '📉 НИЖЕ СРЕДНЕГО';
+                    review = `Унылые ${m.gwPts} очков. Ты вроде стараешься, смотришь стату, а по факту — тебя обходят челы, которые собирают состав пьяными в пятницу. Ошибка: слепая вера в мертвые активы, которые давно не приносят поинты. Совет: сливай балласт и бери стабильную основу.`;
+                } else {
+                    badge = '⚖️ СРЕДНЯЧОК';
+                    review = `Дефолтные ${m.gwPts} поинтов. Ты как середняк АПЛ — ни за титул не борешься, ни вылетаешь. Максимально осторожная игра без риска. Что было плохо: не хватает дерзости при выборе капитана. Что улучшить: хватит копировать пики топов, найди свои уникальные активы, если хочешь подняться выше.`;
+                }
+
+                cont.innerHTML += `
+                    <div class="${bg} p-5 rounded-xl border ${bg === 'bg-white' ? 'border-slate-200' : ''} shadow-sm relative overflow-hidden group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="font-black text-lg text-slate-800">${m.player} <span class="text-xs text-slate-400 font-medium ml-1">(${m.name})</span></div>
+                            <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-900 text-white uppercase tracking-wider">${badge}</span>
+                        </div>
+                        <div class="flex gap-4 mb-4">
+                            <div class="text-center">
+                                <div class="text-xs text-slate-500 font-bold uppercase">Очки тура</div>
+                                <div class="text-xl font-black text-indigo-600">${m.gwPts}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-slate-500 font-bold uppercase">Очки на скамейке</div>
+                                <div class="text-xl font-black text-amber-600">${Math.floor(m.benchPts / 10)}</div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-slate-600 font-medium leading-relaxed bg-white/50 p-3 rounded-lg border border-slate-100 italic">
+                            «${review}»
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function initAI() {
+            const hist = document.getElementById('ai-chat-history');
+            hist.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">AI</div>
+                    <div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-lg rounded-tl-none text-sm shadow-sm font-medium">
+                        Салам алейкум. Я впитал базу данных вашей лиги за 36 туров. 
+                        Вижу, что <b>Мигмар</b> просто уничтожил этот сезон, а <b>Дидар</b> застрял на дне. 
+                        Нажимай кнопки или пиши сам, ща размотаем этих аналитиков по фактам. 🏴‍☠️
+                    </div>
+                </div>
+            `;
+        }
+
+        function askAI(type) {
+            const inputEl = document.getElementById('ai-input');
+            const btnEl = document.getElementById('ai-btn');
+            const history = document.getElementById('ai-chat-history');
+            
+            let text = "";
+            if (type === 'custom') {
+                text = inputEl.value.trim();
+                inputEl.value = '';
+            } else {
+                const map = {
+                    'прожарь': 'Жестко прожарь того, кто на последнем месте. Не стесняйся.',
+                    'лидер': 'Кинь респект лидеру, но с долей сарказма.',
+                    'скамейка': 'Кто там деревянный король скамейки? Унизь его.',
+                    'обзор': 'Кратко поясни за текущий расклад в лиге.'
+                };
+                text = map[type];
+            }
+            if(!text) return;
+
+            // User Message
+            history.innerHTML += `
+                <div class="flex items-start gap-3 justify-end mt-4">
+                    <div class="bg-slate-900 text-white p-3 rounded-lg rounded-tr-none text-sm shadow-sm font-medium max-w-[85%]">${text}</div>
+                </div>`;
+            
+            btnEl.disabled = true;
+            btnEl.innerText = '...';
+
+            setTimeout(() => {
+                let aiResponse = "";
+                const t = text.toLowerCase();
+                
+                if (t.includes('прожарь') || t.includes('последн') || t.includes('дно')) {
+                    aiResponse = `Бро, ну это даже не смешно. <b>Дидар (kWT)</b> пробивает дно с ${LEAGUE_MANAGERS[7].pts} очками. Чел, ты вообще приложение FPL открывал после Рождества? NTV в минусе (-80), разница xP катастрофическая (-140). Тебе даже шаманы не помогут, просто удали аккаунт и иди играй в Фифу на новичке. 🤡`;
+                } else if (t.includes('лидер') || t.includes('респект') || t.includes('мигмар')) {
+                    aiResponse = `<b>Мигмар (Liver in Heart)</b> — просто батя в здании. 2315 очков, отрыв от второго места конский. Красава, базу выдал. Но давай честно, братик, тебе просто дико фортануло с таймингами (NTV +85). Посмотрим, не сдуешься ли ты в следующем сезоне, когда Холанд сломается. 👑`;
+                } else if (t.includes('скамейк') || t.includes('деревянн')) {
+                    aiResponse = `Ахаха, ловите кухонного Гвардиолу! <b>Тимур (kabanchiki)</b> оставил на скамейке ${LEAGUE_MANAGERS[4].benchPts} очков. ${LEAGUE_MANAGERS[4].benchPts}, Карл! Бро, зачем ты покупаешь нормальных игроков, если они у тебя сидят в манишках и смотрят, как твоя основа сливает матчи? Гениальный менеджмент уровня Чемпионшипа. 🪵`;
+                } else if (t.includes('обзор') || t.includes('расклад')) {
+                    aiResponse = `Короче, расклад перед финишем: Мигмар сидит на троне с сигарой. Арман (2180) и Фахриддин (2150) пытаются зацепиться за подиум, но поезд ушел. Крупнейший скам сезона — это Дидар на последнем месте. Из интересного: Куаныш каким-то чудом нафармил 285 очков на дешманских бичах, настоящий Царь Помойки. Лига огонь, ждем ласт туры! 🏴‍☠️`;
+                } else {
+                    aiResponse = `Слушай, формулируй вопрос как пацан. Спроси меня про аутсайдера, про батю лиги, или кто лох на трансферах. Базу данных я вижу всю.`;
+                }
+
+                // AI Message
+                history.innerHTML += `
+                    <div class="flex items-start gap-3 mt-4">
+                        <div class="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">AI</div>
+                        <div class="bg-white border border-indigo-200 text-indigo-900 p-3 rounded-lg rounded-tl-none text-sm shadow-sm font-medium max-w-[85%]">
+                            ${aiResponse}
+                        </div>
+                    </div>`;
+                
+                btnEl.disabled = false;
+                btnEl.innerText = 'СКАЗАТЬ';
+                history.scrollTop = history.scrollHeight;
+            }, 1000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            switchTab('tab-standings');
+        });
+    </script>
 </body>
 </html>
