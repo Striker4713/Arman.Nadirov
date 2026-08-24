@@ -44,6 +44,10 @@
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="status-dot"></span>
                     <span id="data-status-text">⚡ Подключение к FPL API...</span>
                 </div>
+                <button onclick="openJsonModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-md active:scale-95">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span>Импорт JSON</span>
+                </button>
                 <button onclick="syncFPLData()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all shadow-md active:scale-95">
                     <i class="fa-solid fa-rotate" id="sync-icon"></i>
                     <span>Синхронизировать</span>
@@ -409,6 +413,33 @@
 
     </main>
 
+    <!-- JSON Import Modal for Direct FPL Data -->
+    <div id="json-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel p-6 rounded-2xl max-w-2xl w-full border border-amber-500/30 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-amber-400"></i> Прямой импорт реальных данных FPL (#432533)
+                </h3>
+                <button onclick="closeJsonModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                Если Cloudflare блокирует публичные прокси, откройте официальный API FPL вашей лиги в браузере, скопируйте текст и вставьте ниже:
+            </p>
+            <div class="flex items-center gap-2">
+                <a href="https://fantasy.premierleague.com/api/leagues-classic/432533/standings/" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> 1. Открыть FPL API Лиги #432533
+                </a>
+            </div>
+            <textarea id="json-input" rows="6" placeholder="Вставьте скопированный JSON сюда..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-amber-500 custom-scrollbar"></textarea>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeJsonModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">Отмена</button>
+                <button onclick="importLeagueJSON()" class="px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center gap-2">
+                    <i class="fa-solid fa-check"></i> Применить реальные данные
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const LEAGUE_ID = "432533";
         let isLiveData = false;
@@ -436,6 +467,65 @@
         window.onload = function() {
             syncFPLData();
         };
+
+        function openJsonModal() {
+            document.getElementById("json-modal").classList.remove("hidden");
+        }
+
+        function closeJsonModal() {
+            document.getElementById("json-modal").classList.add("hidden");
+        }
+
+        function importLeagueJSON() {
+            const rawText = document.getElementById("json-input").value.trim();
+            if (!rawText) return;
+
+            try {
+                const parsed = JSON.parse(rawText);
+                const results = parsed?.standings?.results || parsed?.results;
+
+                if (results && results.length > 0) {
+                    currentManagers = results.map(r => ({
+                        id: r.entry,
+                        name: r.player_name,
+                        team: r.entry_name,
+                        pts: r.total,
+                        gwPts: r.event_total,
+                        grossGwPts: r.event_total,
+                        hitCost: 0,
+                        squadVal: 100.0,
+                        benchPts: 0,
+                        transfers: 0,
+                        pnl: 0,
+                        chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" },
+                        capPts: Math.floor(r.event_total * 0.35),
+                        bestCap: "Капитан",
+                        capHitPct: r.total > 50 ? 80 : 50,
+                        minBench: 0,
+                        lowCostPts: Math.floor(r.total * 0.2),
+                        unluckyXP: r.total + 5,
+                        historyGWs: [r.event_total]
+                    }));
+
+                    isLiveData = true;
+                    const statusBadge = document.getElementById("data-status-badge");
+                    const statusText = document.getElementById("data-status-text");
+                    const statusDot = document.getElementById("status-dot");
+
+                    statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+                    statusDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+                    statusText.innerText = "🟢 REAL DATA: Импортировано пользователем";
+
+                    closeJsonModal();
+                    calculateAzamatCup();
+                    renderAllTabs();
+                } else {
+                    alert("Некорректная структура JSON. Убедитесь, что скопировали всё содержимое страницы FPL.");
+                }
+            } catch (e) {
+                alert("Ошибка чтения JSON: " + e.message);
+            }
+        }
 
         // Resilient fetch function across multiple CORS proxies
         async function fetchFPL(endpoint) {
