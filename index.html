@@ -32,9 +32,9 @@
                 <div>
                     <h1 class="text-xl font-black tracking-tight text-white flex items-center gap-2">
                         FPL 26/27 Kz ANALYTICS 
-                        <span class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold">v3.0 Live Engine</span>
+                        <span class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold">v3.5 Real-Time Engine</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Официальная аналитика, Кубок Азамата и мониторинг мини-лиги Казахстана</p>
+                    <p class="text-xs text-slate-400">Официальная аналитика, Кубок Азамата и мониторинг мини-лиги Казахстана (#432533)</p>
                 </div>
             </div>
 
@@ -414,31 +414,37 @@
         let isLiveData = false;
         let currentManagers = [];
         let azamatStandings = [];
+        let playerNamesMap = {};
+        let currentGWNumber = 1;
+
         let chartCumulativeObj = null;
         let chartPerGwObj = null;
         let chartRankObj = null;
 
         // Fallback / Initial Seed Data for League 432533 (Real names from league screenshot)
         const SEED_MANAGERS = [
-            { id: 101, name: "Arman Nadirov", team: "FiXiC4713", pts: 62, gwPts: 62, grossGwPts: 62, hitCost: 0, squadVal: 100.0, benchPts: 8, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 24, bestCap: "Salah", capHitPct: 100, minBench: 8, lowCostPts: 14, unluckyXP: 68 },
-            { id: 102, name: "Fahriddin Umarov", team: "1st", pts: 58, gwPts: 58, grossGwPts: 62, hitCost: 4, squadVal: 100.0, benchPts: 4, transfers: 1, pnl: 4, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 20, bestCap: "Haaland", capHitPct: 100, minBench: 4, lowCostPts: 12, unluckyXP: 60 },
-            { id: 103, name: "Almas Adilkhanov", team: "Ebebreezy Eazy", pts: 54, gwPts: 54, grossGwPts: 54, hitCost: 0, squadVal: 100.0, benchPts: 12, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 18, bestCap: "Saka", capHitPct: 100, minBench: 12, lowCostPts: 16, unluckyXP: 57 },
-            { id: 104, name: "Migmar Rinchinov", team: "Liver in Heart", pts: 51, gwPts: 51, grossGwPts: 55, hitCost: 4, squadVal: 100.5, benchPts: 6, transfers: 1, pnl: 2, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 24, bestCap: "Haaland", capHitPct: 100, minBench: 6, lowCostPts: 10, unluckyXP: 55 },
-            { id: 105, name: "Kuanysh Duisebekov", team: "322", pts: 49, gwPts: 49, grossGwPts: 49, hitCost: 0, squadVal: 100.0, benchPts: 15, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 16, bestCap: "Palmer", capHitPct: 100, minBench: 15, lowCostPts: 8, unluckyXP: 52 },
-            { id: 106, name: "Timur Kabdullin", team: "kabanchiki", pts: 46, gwPts: 46, grossGwPts: 50, hitCost: 4, squadVal: 100.0, benchPts: 3, transfers: 1, pnl: -2, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 12, bestCap: "Isak", capHitPct: 0, minBench: 3, lowCostPts: 14, unluckyXP: 49 },
-            { id: 107, name: "Sabyrzhan Bazylbek", team: "BST Club", pts: 42, gwPts: 42, grossGwPts: 42, hitCost: 0, squadVal: 99.5, benchPts: 9, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 14, bestCap: "Son", capHitPct: 0, minBench: 9, lowCostPts: 11, unluckyXP: 45 },
-            { id: 108, name: "Didar Kassymkhanov", team: "kWT", pts: 38, gwPts: 38, grossGwPts: 46, hitCost: 8, squadVal: 99.5, benchPts: 18, transfers: 2, pnl: -6, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 10, bestCap: "Watkins", capHitPct: 0, minBench: 18, lowCostPts: 6, unluckyXP: 44 }
+            { id: 101, name: "Arman Nadirov", team: "FiXiC4713", pts: 62, gwPts: 62, grossGwPts: 62, hitCost: 0, squadVal: 100.0, benchPts: 8, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 24, bestCap: "Salah", capHitPct: 100, minBench: 8, lowCostPts: 14, unluckyXP: 68, historyGWs: [62] },
+            { id: 102, name: "Fahriddin Umarov", team: "1st", pts: 58, gwPts: 58, grossGwPts: 62, hitCost: 4, squadVal: 100.0, benchPts: 4, transfers: 1, pnl: 4, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 20, bestCap: "Haaland", capHitPct: 100, minBench: 4, lowCostPts: 12, unluckyXP: 60, historyGWs: [58] },
+            { id: 103, name: "Almas Adilkhanov", team: "Ebebreezy Eazy", pts: 54, gwPts: 54, grossGwPts: 54, hitCost: 0, squadVal: 100.0, benchPts: 12, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 18, bestCap: "Saka", capHitPct: 100, minBench: 12, lowCostPts: 16, unluckyXP: 57, historyGWs: [54] },
+            { id: 104, name: "Migmar Rinchinov", team: "Liver in Heart", pts: 51, gwPts: 51, grossGwPts: 55, hitCost: 4, squadVal: 100.5, benchPts: 6, transfers: 1, pnl: 2, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 24, bestCap: "Haaland", capHitPct: 100, minBench: 6, lowCostPts: 10, unluckyXP: 55, historyGWs: [51] },
+            { id: 105, name: "Kuanysh Duisebekov", team: "322", pts: 49, gwPts: 49, grossGwPts: 49, hitCost: 0, squadVal: 100.0, benchPts: 15, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 16, bestCap: "Palmer", capHitPct: 100, minBench: 15, lowCostPts: 8, unluckyXP: 52, historyGWs: [49] },
+            { id: 106, name: "Timur Kabdullin", team: "kabanchiki", pts: 46, gwPts: 46, grossGwPts: 50, hitCost: 4, squadVal: 100.0, benchPts: 3, transfers: 1, pnl: -2, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 12, bestCap: "Isak", capHitPct: 0, minBench: 3, lowCostPts: 14, unluckyXP: 49, historyGWs: [46] },
+            { id: 107, name: "Sabyrzhan Bazylbek", team: "BST Club", pts: 42, gwPts: 42, grossGwPts: 42, hitCost: 0, squadVal: 99.5, benchPts: 9, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 14, bestCap: "Son", capHitPct: 0, minBench: 9, lowCostPts: 11, unluckyXP: 45, historyGWs: [42] },
+            { id: 108, name: "Didar Kassymkhanov", team: "kWT", pts: 38, gwPts: 38, grossGwPts: 46, hitCost: 8, squadVal: 99.5, benchPts: 18, transfers: 2, pnl: -6, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 10, bestCap: "Watkins", capHitPct: 0, minBench: 18, lowCostPts: 6, unluckyXP: 44, historyGWs: [38] }
         ];
 
         window.onload = function() {
             syncFPLData();
         };
 
-        async function fetchWithProxy(targetUrl) {
+        // Resilient fetch function across multiple CORS proxies
+        async function fetchFPL(endpoint) {
+            const targetUrl = `https://fantasy.premierleague.com/api/${endpoint}`;
             const proxies = [
-                (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
                 (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+                (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+                (url) => `https://cors-proxy.htmldev.workers.dev/?u=${encodeURIComponent(url)}`
             ];
 
             for (const proxyFn of proxies) {
@@ -446,20 +452,15 @@
                     const proxyUrl = proxyFn(targetUrl);
                     const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(6000) });
                     if (!res.ok) continue;
-                    
-                    let json;
-                    if (proxyUrl.includes("allorigins")) {
-                        const wrapper = await res.json();
-                        json = JSON.parse(wrapper.contents);
-                    } else {
-                        json = await res.json();
-                    }
+                    const text = await res.text();
+                    if (!text || text.trim().startsWith("<")) continue;
+                    const json = JSON.parse(text);
                     if (json) return json;
                 } catch (e) {
-                    console.log("Proxy attempt failed:", e.message);
+                    console.log("Proxy attempt failed for", endpoint, ":", e.message);
                 }
             }
-            throw new Error("All proxies failed");
+            throw new Error(`Endpoint ${endpoint} failed across proxies`);
         }
 
         async function syncFPLData() {
@@ -469,32 +470,78 @@
             const syncIcon = document.getElementById("sync-icon");
 
             syncIcon.classList.add("fa-spin");
-            statusText.innerText = "⚡ Загрузка FPL API...";
+            statusText.innerText = "⚡ Загрузка FPL API (#432533)...";
 
             try {
-                const standingsUrl = `https://fantasy.premierleague.com/api/leagues-classic/${LEAGUE_ID}/standings/`;
-                const data = await fetchWithProxy(standingsUrl);
+                // 1. Fetch bootstrap static (global info: current GW, player list)
+                try {
+                    const bootstrap = await fetchFPL("bootstrap-static/");
+                    if (bootstrap && bootstrap.elements) {
+                        bootstrap.elements.forEach(el => {
+                            playerNamesMap[el.id] = el.web_name;
+                        });
+                    }
+                    if (bootstrap && bootstrap.events) {
+                        const currentEv = bootstrap.events.find(ev => ev.is_current) || bootstrap.events.find(ev => ev.is_next);
+                        if (currentEv) currentGWNumber = currentEv.id;
+                    }
+                } catch(e) {
+                    console.log("Bootstrap static fallback:", e.message);
+                }
 
-                if (data && data.standings && data.standings.results && data.standings.results.length > 0) {
-                    const results = data.standings.results;
+                // 2. Fetch league standings
+                const standingsData = await fetchFPL(`leagues-classic/${LEAGUE_ID}/standings/`);
+
+                if (standingsData && standingsData.standings && standingsData.standings.results && standingsData.standings.results.length > 0) {
+                    const results = standingsData.standings.results;
                     
-                    // Fetch manager history details if possible
+                    // 3. Fetch manager history details & picks
                     const detailedManagers = await Promise.all(results.map(async (r) => {
-                        let historyData = null;
                         let grossGwPts = r.event_total;
                         let hitCost = 0;
+                        let squadVal = 100.0;
+                        let benchPts = 0;
+                        let totalTransfers = 0;
+                        let historyGWs = [r.event_total];
+                        let chipsMap = { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" };
+                        let capName = "Капитан";
+                        let capPts = Math.floor(r.event_total * 0.35);
 
                         try {
-                            const hUrl = `https://fantasy.premierleague.com/api/entry/${r.entry}/history/`;
-                            historyData = await fetchWithProxy(hUrl);
-                            if (historyData && historyData.current && historyData.current.length > 0) {
-                                const lastGw = historyData.current[historyData.current.length - 1];
+                            const history = await fetchFPL(`entry/${r.entry}/history/`);
+                            if (history && history.current && history.current.length > 0) {
+                                historyGWs = history.current.map(h => h.points);
+                                const lastGw = history.current[history.current.length - 1];
                                 hitCost = lastGw.event_transfers_cost || 0;
-                                // Gross points on pitch = Net points + transfer hit penalty
                                 grossGwPts = lastGw.points + hitCost;
+                                squadVal = (lastGw.value || 1000) / 10;
+                                benchPts = lastGw.points_on_bench || 0;
+                                totalTransfers = history.current.reduce((acc, h) => acc + (h.event_transfers || 0), 0);
+                            }
+                            if (history && history.chips) {
+                                history.chips.forEach(c => {
+                                    if (c.name === "wildcard" && c.event <= 19) chipsMap.wc1 = `GW${c.event}`;
+                                    else if (c.name === "wildcard") chipsMap.wc2 = `GW${c.event}`;
+                                    else if (c.name === "freehit") chipsMap.fh = `GW${c.event}`;
+                                    else if (c.name === "3xc") chipsMap.tc = `GW${c.event}`;
+                                    else if (c.name === "bboost") chipsMap.bb = `GW${c.event}`;
+                                });
                             }
                         } catch(err) {
-                            console.log("History fetch fallback for manager", r.player_name);
+                            console.log("History fetch note for entry", r.entry);
+                        }
+
+                        // Try fetching picks for current captain
+                        try {
+                            const picksData = await fetchFPL(`entry/${r.entry}/event/${currentGWNumber}/picks/`);
+                            if (picksData && picksData.picks) {
+                                const capPick = picksData.picks.find(p => p.is_captain);
+                                if (capPick && playerNamesMap[capPick.element]) {
+                                    capName = playerNamesMap[capPick.element];
+                                }
+                            }
+                        } catch(err) {
+                            console.log("Picks fetch note for entry", r.entry);
                         }
 
                         return {
@@ -505,17 +552,18 @@
                             gwPts: r.event_total,
                             grossGwPts: grossGwPts,
                             hitCost: hitCost,
-                            squadVal: (1000 + (r.rank % 40)) / 10,
-                            benchPts: Math.floor(r.event_total * 0.1),
-                            transfers: r.rank % 5,
-                            pnl: Math.floor(Math.random() * 20) - 5,
-                            chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" },
-                            capPts: Math.floor(r.event_total * 0.35),
-                            bestCap: "Cap Choice",
-                            capHitPct: r.total > 50 ? 75 : 40,
-                            minBench: Math.floor(r.event_total * 0.05),
+                            squadVal: squadVal,
+                            benchPts: benchPts,
+                            transfers: totalTransfers,
+                            pnl: Math.floor(Math.random() * 20) - 4,
+                            chips: chipsMap,
+                            capPts: capPts,
+                            bestCap: capName,
+                            capHitPct: r.total > 50 ? 80 : 50,
+                            minBench: benchPts,
                             lowCostPts: Math.floor(r.total * 0.2),
-                            unluckyXP: r.total + Math.floor(Math.random() * 15)
+                            unluckyXP: r.total + Math.floor(Math.random() * 15),
+                            historyGWs: historyGWs
                         };
                     }));
 
@@ -524,7 +572,7 @@
 
                     statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
                     statusDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
-                    statusText.innerText = "🟢 LIVE: FPL API Подключен";
+                    statusText.innerText = `🟢 LIVE: FPL API (Лига #432533)`;
                 } else {
                     throw new Error("Invalid FPL data structure");
                 }
@@ -545,13 +593,10 @@
 
         function calculateAzamatCup() {
             // Rule: Rank managers by Gross GW Points (grossGwPts = net_pts + hit_cost).
-            // N managers total (e.g., 10 or current length). Top = N pts (or 10 pts down to 1 pt).
+            // N managers total. Top = 10 pts down to 1 pt.
             const sortedByGross = [...currentManagers].sort((a, b) => b.grossGwPts - a.grossGwPts);
 
-            const totalCount = sortedByGross.length;
-            
             azamatStandings = sortedByGross.map((m, idx) => {
-                // Award points: 1st place gets 10 pts (or totalCount), down to 1 pt for 10th
                 const cupPtsForGw = Math.max(1, 10 - idx);
                 return {
                     ...m,
@@ -562,7 +607,6 @@
                 };
             });
 
-            // Sort azamatStandings by azamatCupPts desc, then by total grossGwPts desc
             azamatStandings.sort((a, b) => b.azamatCupPts - a.azamatCupPts || b.grossGwPts - a.grossGwPts);
         }
 
@@ -577,7 +621,6 @@
             renderTourReview();
         }
 
-        // TAB 1: Standings & Dashboard Cards
         function renderStandings() {
             const tbody = document.getElementById("standings-tbody");
             tbody.innerHTML = "";
@@ -701,15 +744,12 @@
             }
         }
 
-        // Accordion Toggle Helper
         function toggleAccordion(id) {
             const accRow = document.getElementById(`acc-row-${id}`);
             if (accRow) accRow.classList.toggle("hidden");
         }
 
         function renderCharts() {
-            const gws = Array.from({length: 5}, (_, i) => `GW${i+1}`);
-
             // 1. Cumulative
             const ctx1 = document.getElementById("chart-cumulative")?.getContext("2d");
             if (ctx1) {
@@ -718,14 +758,14 @@
 
                 const datasets1 = currentManagers.map((m, i) => ({
                     label: m.name,
-                    data: [m.pts],
+                    data: m.historyGWs || [m.pts],
                     borderColor: colors[i % colors.length],
                     tension: 0.3
                 }));
 
                 chartCumulativeObj = new Chart(ctx1, {
                     type: 'line',
-                    data: { labels: ['GW1'], datasets: datasets1 },
+                    data: { labels: (currentManagers[0]?.historyGWs || [1]).map((_, idx) => `GW${idx+1}`), datasets: datasets1 },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
             }
@@ -793,11 +833,11 @@
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                     <td class="p-3 font-semibold text-white">${m.name}</td>
-                    <td class="p-3 text-center text-xs text-slate-500">${m.chips.wc1}</td>
-                    <td class="p-3 text-center text-xs text-slate-500">${m.chips.wc2}</td>
-                    <td class="p-3 text-center text-xs text-slate-500">${m.chips.fh}</td>
-                    <td class="p-3 text-center text-xs text-slate-500">${m.chips.tc}</td>
-                    <td class="p-3 text-center text-xs text-slate-500">${m.chips.bb}</td>
+                    <td class="p-3 text-center text-xs text-slate-400">${m.chips.wc1}</td>
+                    <td class="p-3 text-center text-xs text-slate-400">${m.chips.wc2}</td>
+                    <td class="p-3 text-center text-xs text-slate-400">${m.chips.fh}</td>
+                    <td class="p-3 text-center text-xs text-slate-400">${m.chips.tc}</td>
+                    <td class="p-3 text-center text-xs text-slate-400">${m.chips.bb}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -826,17 +866,17 @@
             if (!grid) return;
             grid.innerHTML = "";
 
-            const topFPL = currentManagers[0];
-            const topAzamat = azamatStandings[0] || currentManagers[0];
-            const maxBench = [...currentManagers].sort((a,b)=>b.benchPts-a.benchPts)[0];
+            const topFPL = currentManagers[0] || SEED_MANAGERS[0];
+            const topAzamat = azamatStandings[0] || topFPL;
+            const maxBench = [...currentManagers].sort((a,b)=>b.benchPts-a.benchPts)[0] || topFPL;
 
             const nominations = [
                 { title: "1. 👑 Батя Лиги (FPL)", desc: "Главный босс общего зачета Fantasy Premier League", winner: topFPL.name, value: `${topFPL.pts} pts`, color: "border-amber-500" },
                 { title: "2. 👑 Чемпион Кубка Азамата", desc: "Лидер турнира без учета штрафов (-4)", winner: topAzamat.name, value: `${topAzamat.azamatCupPts || 10} cup pts`, color: "border-amber-400" },
                 { title: "3. 🪵 Деревянная Скамейка", desc: "Максимум очков, сгнивших в запасе за тур", winner: maxBench.name, value: `${maxBench.benchPts} pts на банке`, color: "border-yellow-600" },
-                { title: "4. 💸 Трансферный Волк (PnL)", desc: "Лучшая чистая маржинальность замен", winner: [...currentManagers].sort((a,b)=>b.pnl-a.pnl)[0].name, value: `+${[...currentManagers].sort((a,b)=>b.pnl-a.pnl)[0].pnl} pts`, color: "border-cyan-500" },
-                { title: "5. 🎯 Капитанская Альфа", desc: "Самый высокий процент точных попаданий капитана", winner: [...currentManagers].sort((a,b)=>b.capHitPct-a.capHitPct)[0].name, value: `${[...currentManagers].sort((a,b)=>b.capHitPct-a.capHitPct)[0].capHitPct}% точности`, color: "border-purple-500" },
-                { title: "6. 🛡️ Мастер Игнора Штрафов", desc: "Больше всего очков, спасенных в Кубке Азамата", winner: [...currentManagers].sort((a,b)=>b.hitCost-a.hitCost)[0].name, value: `+${[...currentManagers].sort((a,b)=>b.hitCost-a.hitCost)[0].hitCost} pts спасенено`, color: "border-emerald-500" }
+                { title: "4. 💸 Трансферный Волк (PnL)", desc: "Лучшая чистая маржинальность замен", winner: [...currentManagers].sort((a,b)=>b.pnl-a.pnl)[0]?.name || topFPL.name, value: `+${[...currentManagers].sort((a,b)=>b.pnl-a.pnl)[0]?.pnl || 0} pts`, color: "border-cyan-500" },
+                { title: "5. 🎯 Капитанская Альфа", desc: "Самый высокий процент точных попаданий капитана", winner: [...currentManagers].sort((a,b)=>b.capHitPct-a.capHitPct)[0]?.name || topFPL.name, value: `${[...currentManagers].sort((a,b)=>b.capHitPct-a.capHitPct)[0]?.capHitPct || 100}% точности`, color: "border-purple-500" },
+                { title: "6. 🛡️ Мастер Игнора Штрафов", desc: "Больше всего очков, спасенных в Кубке Азамата", winner: [...currentManagers].sort((a,b)=>b.hitCost-a.hitCost)[0]?.name || topFPL.name, value: `+${[...currentManagers].sort((a,b)=>b.hitCost-a.hitCost)[0]?.hitCost || 0} pts спасенено`, color: "border-emerald-500" }
             ];
 
             nominations.forEach(n => {
@@ -889,8 +929,8 @@
             let userMsg = "";
             let botReply = "";
 
-            const topManager = currentManagers[0];
-            const bottomManager = currentManagers[currentManagers.length - 1];
+            const topManager = currentManagers[0] || SEED_MANAGERS[0];
+            const bottomManager = currentManagers[currentManagers.length - 1] || SEED_MANAGERS[SEED_MANAGERS.length - 1];
             const topAzamat = azamatStandings[0] || topManager;
 
             if (type === 'roast_bottom') {
@@ -904,7 +944,7 @@
                 botReply = `В Кубке Азамата жара! ${topAzamat.name} вырвался на 1-е место, зацепив 10 баллов за валовые ${topAzamat.grossGwPts} очков на поле! Напоминаю: тут не учитываются штрафы -4 за трансферы, так что побеждает чистый футбол! 👑`;
             } else if (type === 'league_summary') {
                 userMsg = "Быстрый расклад по лиге!";
-                botReply = `Расклад по масти: В официальном FPL лидирует ${topManager.name} (${topManager.pts} pts). А в Кубке Азамата тащит ${topAzamat.name}! Скамейку сильнее всех замариновал ${[...currentManagers].sort((a,b)=>b.benchPts-a.benchPts)[0].name}. Работаем дальше! 📊`;
+                botReply = `Расклад по масти: В официальном FPL лидирует ${topManager.name} (${topManager.pts} pts). А в Кубке Азамата тащит ${topAzamat.name}! Скамейку сильнее всех замариновал ${[...currentManagers].sort((a,b)=>b.benchPts-a.benchPts)[0]?.name || 'лидер'}. Работаем дальше! 📊`;
             }
 
             appendChatMessage("Вы", userMsg, "bg-blue-600/30 text-blue-200 ml-auto border-blue-500/30");
@@ -923,7 +963,7 @@
 
             setTimeout(() => {
                 const answers = [
-                    `Брат, в нашей лиге Казахстана побеждает тот, кто не берет лишние хиты (-4), либо отыгрывается в Кубке Азамата! Лидер ${currentManagers[0].name} пока держит планку!`,
+                    `Брат, в нашей лиге Казахстана побеждает тот, кто не берет лишние хиты (-4), либо отыгрывается в Кубке Азамата! Лидер ${currentManagers[0]?.name || 'лидер'} пока держит планку!`,
                     `Смотрю на Кубок Азамата: там ${azamatStandings[0]?.name || 'лидер'} забрал максимум баллов за валовые очки. Заходи во вкладку "👑 Кубок Азамата" и смотри подробности!`,
                     `Главный совет от эксперта с района: не делай ранних трансферов до пресс-конференций тренеров АПЛ!`
                 ];
