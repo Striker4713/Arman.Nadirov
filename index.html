@@ -431,16 +431,16 @@
         async function fetchFPL(endpoint) {
             const targetUrl = `https://fantasy.premierleague.com/api/${endpoint}`;
             
-            // 1. Собственный туннель Vercel (Идеальное решение, работает как часы)
+            // 1. Мощный серверный API Vercel (Подмена браузера для обхода Cloudflare)
             try {
-                const vercelRes = await fetch(`/api/fpl/${endpoint}`);
+                const vercelRes = await fetch(`/api/proxy?path=${endpoint}`);
                 if (vercelRes.ok) {
                     const text = await vercelRes.text();
                     // Защита: если вернулся не HTML-код ошибки, значит это чистый JSON от FPL
                     if (!text.trim().startsWith("<")) return JSON.parse(text);
                 }
             } catch(e) {
-                console.log("Vercel Proxy error:", e.message);
+                console.log("Vercel Serverless error:", e.message);
             }
 
             // 2. Прямой запрос (на случай, если тестируете локально с расширением)
