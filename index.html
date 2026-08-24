@@ -249,7 +249,7 @@
     <script>
         /**
          * FPL Kz Analytics v2.0 - Core Engine
-         * Архитектура без мок-данных, полностью основанная на localStorage и fetch API
+         * Архитектура без мок-данных, полностью основанная на localStorage и усиленном fetch API
          */
 
         // 1. STATE MANAGEMENT
@@ -259,13 +259,12 @@
         const appState = {
             currentGW: 1,
             managers: [], 
-            gameweeks: [], // Хранит исторические маппинги Кубка Азамата
+            gameweeks: [], 
             activeTab: 'tab-standings',
             charts: {},
             dataLoaded: false
         };
 
-        // Базовая структура менеджера для инициализации
         const createManagerTemplate = (id, name, team) => ({
             id, name, team,
             totalPoints: 0, gwPoints: 0,
@@ -273,8 +272,8 @@
             benchPoints: 0,
             captain: 'N/A', viceCaptain: 'N/A', multiplier: 1,
             chips: [],
-            history: [], // [{ gw, points, rank, cupPoints, rawGwPts }]
-            picks: [] // Текущие пики для дифференциалов
+            history: [], 
+            picks: [] 
         });
 
         // 2. INITIALIZATION
@@ -283,7 +282,6 @@
             initAI();
             bindEvents();
             
-            // Восстановление состояния
             const savedState = localStorage.getItem(STORAGE_KEY);
             if (savedState) {
                 try {
@@ -298,11 +296,9 @@
                 } catch(e) { console.error("Cache error", e); }
             }
 
-            // Авто-загрузка свежих данных
             loadData();
         });
 
-        // Подвязка событий
         function bindEvents() {
             document.getElementById('btn-sync').addEventListener('click', loadData);
             document.getElementById('btn-retry').addEventListener('click', loadData);
@@ -337,21 +333,18 @@
             document.getElementById('error-container').classList.add('hidden');
         }
 
-        // Управление вкладками без inline JS
         function initTabs() {
             const btns = document.querySelectorAll('.tab-btn');
             btns.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const targetId = e.currentTarget.getAttribute('data-tab');
                     
-                    // Сброс активностей
                     document.querySelectorAll('.tab-btn').forEach(b => {
                         b.classList.remove('active');
                         b.setAttribute('aria-selected', 'false');
                     });
                     document.querySelectorAll('[role="tabpanel"]').forEach(p => p.classList.add('hidden'));
                     
-                    // Активация
                     e.currentTarget.classList.add('active');
                     e.currentTarget.setAttribute('aria-selected', 'true');
                     document.getElementById(targetId).classList.remove('hidden');
@@ -361,27 +354,34 @@
                 });
             });
 
-            // Восстановление активного таба
             if (appState.activeTab) {
                 const targetBtn = document.querySelector(`.tab-btn[data-tab="${appState.activeTab}"]`);
                 if (targetBtn) targetBtn.click();
             }
         }
 
-        // Управление графиками Chart.js
         function createChart(canvasId, type, data, options) {
             if (appState.charts[canvasId]) appState.charts[canvasId].destroy();
             const ctx = document.getElementById(canvasId).getContext('2d');
             appState.charts[canvasId] = new Chart(ctx, { type, data, options });
         }
 
-        // 4. DATA FETCHING (Реальный FPL API)
+        // 4. DATA FETCHING (Реальный FPL API с усиленной логикой)
         async function fetchFPLAPI(endpoint) {
             const targetUrl = `https://fantasy.premierleague.com/api/${endpoint}`;
-            // Proxy fallback цепочка для обхода CORS
+            
+            // 1. Сначала пробуем прямой запрос (сработает при включенном Allow CORS)
+            try {
+                const directRes = await fetch(targetUrl);
+                if (directRes.ok) return await directRes.json();
+            } catch(e) {}
+
+            // 2. Расширенная цепочка fallback-прокси
             const proxies = [
                 `/api/proxy?url=${encodeURIComponent(targetUrl)}`, 
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+                `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, 
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, 
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}` 
             ];
             
             for (let url of proxies) {
@@ -390,7 +390,7 @@
                     if (res.ok) return await res.json();
                 } catch(e) { continue; }
             }
-            throw new Error(`Блокировка API. Прокси недоступны. ${endpoint}`);
+            throw new Error(`Блокировка API. Все прокси и прямой доступ отклонены. ${endpoint}`);
         }
 
         async function loadData() {
@@ -400,7 +400,6 @@
             hideError();
 
             try {
-                // Базовые данные и таблица
                 const bootstrap = await fetchFPLAPI('bootstrap-static/');
                 const league = await fetchFPLAPI(`leagues-classic/${LEAGUE_ID}/standings/`);
                 
@@ -415,7 +414,6 @@
                 const newManagers = [];
                 const results = league.standings.results;
 
-                // Для каждого менеджера собираем полную историю и пики
                 await Promise.all(results.map(async (r) => {
                     let mgr = createManagerTemplate(r.entry, r.player_name, r.entry_name);
                     mgr.totalPoints = r.total;
@@ -425,27 +423,24 @@
                     if (hist) {
                         mgr.chips = hist.chips || [];
                         
-                        // Строим историю
                         hist.current.forEach(gw => {
                             mgr.history.push({
                                 gw: gw.event,
                                 points: gw.points,
                                 rank: gw.overall_rank,
                                 cupPoints: 0, 
-                                rawGwPts: gw.points + gw.event_transfers_cost, // Чистые очки
+                                rawGwPts: gw.points + gw.event_transfers_cost, 
                                 hitCost: gw.event_transfers_cost,
                                 benchPoints: gw.points_on_bench
                             });
                         });
                         
-                        // Аггрегируем сезонные статы
                         mgr.transferCount = hist.current.reduce((acc, curr) => acc + curr.event_transfers, 0);
                         mgr.hitCost = hist.current.reduce((acc, curr) => acc + curr.event_transfers_cost, 0);
                         const currHist = hist.current.find(h => h.event === appState.currentGW);
                         if(currHist) mgr.benchPoints = currHist.points_on_bench;
                     }
 
-                    // Текущие пики для кэпов и диффов
                     const picksData = await fetchFPLAPI(`entry/${r.entry}/event/${appState.currentGW}/picks/`);
                     if (picksData && picksData.picks) {
                         mgr.picks = picksData.picks.map(p => elementsMap[p.element] || "Unknown");
@@ -461,7 +456,6 @@
                     newManagers.push(mgr);
                 }));
 
-                // Нормализация Кубка Азамата (ретроспективный подсчет)
                 normalizeAzamatCup(newManagers);
 
                 appState.managers = newManagers;
@@ -479,17 +473,14 @@
             }
         }
 
-        // Математика Кубка Азамата
         function normalizeAzamatCup(managers) {
             appState.gameweeks = [];
             for (let gw = 1; gw <= appState.currentGW; gw++) {
-                // Вытаскиваем стату каждого на этом GW
                 let gwStats = managers.map(m => {
                     const h = m.history.find(x => x.gw === gw);
                     return { id: m.id, rawPts: h ? h.rawGwPts : 0, histRef: h };
-                }).filter(m => m.histRef); // Отсекаем если нет данных
+                }).filter(m => m.histRef); 
 
-                // Сортируем по сырым очкам
                 gwStats.sort((a, b) => b.rawPts - a.rawPts);
                 
                 let pointsMap = {};
@@ -502,12 +493,10 @@
             }
         }
 
-
         // 5. RENDERING PIPELINE
         function renderAll() {
             if (!appState.managers || appState.managers.length === 0) return;
             
-            // Сортировка по дефолту (General Rank)
             appState.managers.sort((a,b) => b.totalPoints - a.totalPoints);
             
             updateManagerSelects();
@@ -532,14 +521,11 @@
             });
         }
 
-        // TAB 1: Дашборд
         function renderDashboard() {
             if (!appState.managers.length) return;
             const kpiContainer = document.getElementById('kpi-container');
             const leader = appState.managers[0];
             
-            // Находим лидера тура
-            let gwLeader = [...appState.managers].sort((a,b) => b.gwPoints - a.gwPoints)[0];
             let avgGW = (appState.managers.reduce((acc, m) => acc + m.gwPoints, 0) / appState.managers.length).toFixed(1);
             let maxGap = appState.managers.length > 1 ? appState.managers[0].totalPoints - appState.managers[appState.managers.length-1].totalPoints : 0;
 
@@ -557,12 +543,10 @@
             let tHtml = '', ghHtml = '<tr><th class="p-2"></th>', gbHtml = '';
 
             appState.managers.forEach((m, i) => {
-                // Table logic
                 const prevHist = m.history.find(h => h.gw === appState.currentGW - 1);
                 let rankChange = '—';
                 let rankColor = 'text-slate-400';
                 
-                // Gap logic
                 let gapToLeader = leader.totalPoints - m.totalPoints;
                 let gapDisplay = i === 0 ? '—' : `-${gapToLeader}`;
 
@@ -577,7 +561,6 @@
                     </tr>
                 `;
 
-                // Gap Matrix Logic
                 ghHtml += `<th class="p-2 text-slate-400">#${i+1}</th>`;
                 gbHtml += `<tr class="hover:bg-white/5"><td class="p-2 font-bold text-left text-xs">${escapeHTML(m.name.split(' ')[0])}</td>`;
                 
@@ -595,10 +578,8 @@
             gTbody.innerHTML = gbHtml;
         }
 
-        // TAB 2: Азамат
         function renderAzamatCup() {
             const tbody = document.getElementById('azamat-tbody');
-            // Сортируем менеджеров по общему баллу Азамата
             let cupStandings = appState.managers.map(m => {
                 let totalCup = m.history.reduce((sum, h) => sum + (h.cupPoints || 0), 0);
                 let currentGWHist = m.history.find(h => h.gw === appState.currentGW);
@@ -620,7 +601,6 @@
                 </tr>
             `).join('');
 
-            // Chart
             const labels = Array.from({length: appState.currentGW}, (_, i) => `GW${i+1}`);
             const colors = ['#00ff85', '#00d9ff', '#ff0055', '#ffaa00', '#aa00ff', '#ffffff', '#0055ff', '#aaff00'];
             
@@ -641,7 +621,6 @@
             });
         }
 
-        // TAB 3: Дифференциалы
         function renderDifferentials() {
             const container = document.getElementById('differentials-container');
             if (appState.currentGW === 1 && (!appState.managers[0].picks || !appState.managers[0].picks.length)) {
@@ -649,7 +628,6 @@
                 return;
             }
 
-            // Агрегация пиков
             let ownership = {};
             appState.managers.forEach(m => {
                 (m.picks || []).forEach(player => {
@@ -658,12 +636,11 @@
                 });
             });
 
-            // Находим реальные дифференциалы (владеют 1-2 человека)
             let diffHtml = '<table class="w-full text-sm text-left border-collapse"><thead class="bg-black/40 text-xs uppercase text-slate-400 border-b border-white/10"><tr><th class="p-3 pl-4">Игрок</th><th class="p-3 text-center">Owned By</th><th class="p-3 text-center">Владельцы</th></tr></thead><tbody class="divide-y divide-white/5">';
             
             Object.keys(ownership).sort((a,b) => ownership[a].length - ownership[b].length).forEach(player => {
                 let count = ownership[player].length;
-                if (count > 0 && count <= 3) { // Показываем только диффы
+                if (count > 0 && count <= 3) { 
                     diffHtml += `<tr class="hover:bg-white/5">
                         <td class="p-3 pl-4 font-bold text-white">${escapeHTML(player)}</td>
                         <td class="p-3 text-center text-amber-400 font-bold">${count}/${appState.managers.length}</td>
@@ -675,7 +652,6 @@
             container.innerHTML = diffHtml;
         }
 
-        // TAB 4: Графики (Очки и Ранки)
         function renderCharts(filterId) {
             let managers = appState.managers;
             if (filterId !== 'all') managers = managers.filter(m => m.id == filterId);
@@ -683,7 +659,6 @@
             const labels = Array.from({length: appState.currentGW}, (_, i) => `GW${i+1}`);
             const colors = ['#00ff85', '#00d9ff', '#ff0055', '#ffaa00', '#aa00ff', '#ffffff', '#0055ff', '#aaff00'];
 
-            // GW Points
             const ptsDatasets = managers.map((m, i) => {
                 const data = labels.map((_, idx) => { const h = m.history.find(x => x.gw === idx+1); return h ? h.points : 0; });
                 return { label: escapeHTML(m.name), data, borderColor: colors[i%colors.length], tension: 0.3 };
@@ -694,7 +669,6 @@
                 scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' } } }
             });
 
-            // Ranks (inverted Y axis)
             const rankDatasets = managers.map((m, i) => {
                 const data = labels.map((_, idx) => { const h = m.history.find(x => x.gw === idx+1); return h ? h.rank : null; });
                 return { label: escapeHTML(m.name), data, borderColor: colors[i%colors.length], tension: 0.3 };
@@ -706,11 +680,9 @@
             });
         }
 
-        // TAB 5: Трансферы
         function renderTransfers() {
             const tbody = document.getElementById('transfers-tbody');
             tbody.innerHTML = appState.managers.map(m => {
-                // Если нет трансферов - ROI N/A
                 let roi = m.transferCount === 0 ? 'N/A' : ((m.totalPoints / (m.transferCount * 4 || 1)).toFixed(1)); 
                 return `
                 <tr class="hover:bg-white/5">
@@ -722,12 +694,10 @@
             `}).join('');
         }
 
-        // TAB 6: Чипы
         function renderChips() {
             const thead = document.getElementById('chips-head');
             const tbody = document.getElementById('chips-tbody');
             
-            // Собираем все сыгранные туры для заголовка (оптимизация до 5 последних, если много)
             let gws = Array.from({length: appState.currentGW}, (_, i) => i+1);
             
             thead.innerHTML = `<tr class="bg-black/40 text-xs uppercase text-slate-400 border-b border-white/10"><th class="p-3 pl-4 text-left">Менеджер</th>` + gws.map(g => `<th class="p-3 text-center">GW${g}</th>`).join('') + `</tr>`;
@@ -743,7 +713,6 @@
             }).join('');
         }
 
-        // TAB 7: Капитаны
         function renderCaptains() {
             const tbody = document.getElementById('captains-tbody');
             if (!appState.managers[0].picks || appState.managers[0].picks.length === 0) {
@@ -762,7 +731,6 @@
             `}).join('');
         }
 
-        // TAB 8: Номинации
         function renderHallOfFame() {
             const grid = document.getElementById('nominations-grid');
             if (appState.currentGW < 2) {
