@@ -23,7 +23,6 @@
 </head>
 <body class="min-h-screen pb-12">
 
-    <!-- Header / Top Bar -->
     <header class="glass-panel sticky top-0 z-50 border-b border-slate-800 bg-slate-900/90 px-4 py-3">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -33,13 +32,12 @@
                 <div>
                     <h1 class="text-xl font-black tracking-tight text-white flex items-center gap-2">
                         FPL 26/27 Kz ANALYTICS 
-                        <span class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold">v6.0 Auto-Sync</span>
+                        <span class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold">v6.1 Auto-Sync</span>
                     </h1>
                     <p class="text-xs text-slate-400">Автоматический мониторинг лиги Казахстана (#432533) и Кубок Азамата</p>
                 </div>
             </div>
 
-            <!-- Status Indicator & Live Sync -->
             <div class="flex items-center gap-3">
                 <div id="data-status-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/30">
                     <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse" id="status-dot"></span>
@@ -53,10 +51,7 @@
         </div>
     </header>
 
-    <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 mt-6">
-
-        <!-- Navigation Tabs -->
         <nav class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar mb-6">
             <button onclick="switchTab('tab-standings', event)" class="tab-btn active px-4 py-2.5 rounded-xl text-sm font-semibold border border-transparent text-slate-300 hover:text-white hover:bg-slate-800 transition-all whitespace-nowrap flex items-center gap-2">
                 <i class="fa-solid fa-trophy text-amber-400"></i> 🏆 Главный дашборд
@@ -89,7 +84,6 @@
 
         <!-- TAB 1: Standings -->
         <section id="tab-standings" class="tab-content space-y-6">
-            <!-- Stats Overview Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-amber-500">
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Лидер лиги (FPL)</p>
@@ -113,7 +107,6 @@
                 </div>
             </div>
 
-            <!-- Main Standings Table -->
             <div class="glass-panel rounded-2xl overflow-hidden">
                 <div class="p-4 border-b border-slate-800 flex flex-col md:flex-row justify-between md:items-center gap-2">
                     <div>
@@ -138,13 +131,11 @@
                             </tr>
                         </thead>
                         <tbody id="standings-tbody" class="divide-y divide-slate-800/50 text-sm">
-                            <!-- Dynamic Content -->
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Azamat Cup Quick View Section -->
+            
             <div class="glass-panel p-6 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-slate-900/80 to-slate-900 azamat-glow">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                     <div>
@@ -155,12 +146,11 @@
                             </h2>
                         </div>
                         <p class="text-xs text-slate-300 mt-1">
-                            <strong>Правило Кубка:</strong> Набор очков по местам в туре: 1st=10 pts, 2nd=9 pts ... 10th=1 pt. 
-                            <span class="text-amber-400 font-semibold">Считаются чисто валовые очки (Gross Pts) БЕЗ списаний за платные трансферы!</span>
+                            Набор очков по местам в туре. Считаются чисто валовые очки БЕЗ списаний за трансферы!
                         </p>
                     </div>
-                    <button onclick="switchTab('tab-azamat', event)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2 whitespace-nowrap">
-                        <span>Полная таблица Кубка</span>
+                    <button onclick="switchTab('tab-azamat', event)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2">
+                        <span>Полная таблица</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
@@ -172,19 +162,16 @@
                                 <th class="p-3">Менеджер</th>
                                 <th class="p-3 text-center">Очки Кубка</th>
                                 <th class="p-3 text-center">GW Валовые Pts</th>
-                                <th class="p-3 text-center">GW Баллы</th>
                                 <th class="p-3 text-center">Штрафы Игнорированы</th>
                             </tr>
                         </thead>
                         <tbody id="azamat-preview-tbody" class="divide-y divide-slate-800/50">
-                            <!-- Dynamic Azamat Preview -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 2: Azamat Cup Dedicated Page -->
         <section id="tab-azamat" class="tab-content hidden space-y-6">
             <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-amber-500">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
@@ -192,17 +179,9 @@
                         <h2 class="text-2xl font-black text-white flex items-center gap-2">
                             👑 Кубок Азамата — Полный Зачет
                         </h2>
-                        <p class="text-slate-300 text-xs mt-1">
-                            Чистый турнир на мастерство выбора 11 футболистов. В расчет берутся все заработанные очки на поле <strong>без штрафов (-4/-8) за платные замены</strong>. 
-                            В каждом туре лучший получает 10 очков, худший — 1 очко.
-                        </p>
-                    </div>
-                    <div class="bg-amber-500/10 border border-amber-500/30 px-4 py-2 rounded-xl text-center">
-                        <span class="text-[10px] text-amber-400 uppercase font-semibold tracking-wider block">Формат очков</span>
-                        <span class="text-xs font-bold text-white">1-е место = 10 pts ... 10-е = 1 pt</span>
+                        <p class="text-slate-300 text-xs mt-1">Чистый турнир на мастерство. Без штрафов (-4/-8) за замены.</p>
                     </div>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
@@ -210,57 +189,37 @@
                                 <th class="p-3 pl-4">#</th>
                                 <th class="p-3">Менеджер / Команда</th>
                                 <th class="p-3 text-center bg-amber-500/10 text-amber-300">Очки Кубка Азамата</th>
-                                <th class="p-3 text-center">Всего Валовых Pts (Gross)</th>
+                                <th class="p-3 text-center">Всего Валовых Pts</th>
                                 <th class="p-3 text-center">Сэкономлено на штрафах</th>
-                                <th class="p-3 text-center">Текущий тур (GW Pts / Rank Pts)</th>
                             </tr>
                         </thead>
                         <tbody id="azamat-full-tbody" class="divide-y divide-slate-800/50">
-                            <!-- Dynamic Full Azamat Table -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 3: Charts -->
         <section id="tab-charts" class="tab-content hidden space-y-6">
             <div class="glass-panel p-5 rounded-2xl">
-                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-line text-blue-400"></i> Общая динамика набора очков (Накопительный)
-                </h3>
-                <div class="h-80">
-                    <canvas id="chart-cumulative"></canvas>
-                </div>
+                <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-chart-line text-blue-400"></i> Накопительный график</h3>
+                <div class="h-80"><canvas id="chart-cumulative"></canvas></div>
             </div>
-
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glass-panel p-5 rounded-2xl">
-                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-column text-emerald-400"></i> Очки по каждому туру отдельно
-                    </h3>
-                    <div class="h-72">
-                        <canvas id="chart-per-gw"></canvas>
-                    </div>
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-chart-column text-emerald-400"></i> Очки по турам</h3>
+                    <div class="h-72"><canvas id="chart-per-gw"></canvas></div>
                 </div>
                 <div class="glass-panel p-5 rounded-2xl">
-                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-arrow-trend-up text-purple-400"></i> Динамика позиции в лиге
-                    </h3>
-                    <div class="h-72">
-                        <canvas id="chart-rank-history"></canvas>
-                    </div>
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-arrow-trend-up text-purple-400"></i> Динамика ранга</h3>
+                    <div class="h-72"><canvas id="chart-rank-history"></canvas></div>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 4: Transfers -->
         <section id="tab-transfers" class="tab-content hidden space-y-6">
             <div class="glass-panel p-5 rounded-2xl">
-                <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-right-left text-emerald-400"></i> Журнал Трансферов & PnL
-                </h3>
-                <p class="text-xs text-slate-400 mb-4">Реальное количество замен, списания за хиты (-4) и маржинальность решений участников.</p>
+                <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-right-left text-emerald-400"></i> Трансферы</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
@@ -268,26 +227,18 @@
                                 <th class="p-3">Менеджер</th>
                                 <th class="p-3 text-center">Всего замен</th>
                                 <th class="p-3 text-center">Штрафы за тур (-4)</th>
-                                <th class="p-3 text-center">Очки в туре</th>
-                                <th class="p-3 text-center">Валовые очки (без -4)</th>
-                                <th class="p-3 text-center">Чистый PnL</th>
+                                <th class="p-3 text-center">Валовые очки тура</th>
                             </tr>
                         </thead>
-                        <tbody id="transfers-tbody" class="divide-y divide-slate-800/50">
-                            <!-- Dynamic Content -->
-                        </tbody>
+                        <tbody id="transfers-tbody" class="divide-y divide-slate-800/50"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 5: Chips -->
         <section id="tab-chips" class="tab-content hidden space-y-6">
             <div class="glass-panel p-5 rounded-2xl">
-                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-purple-400"></i> Реальная Матрица Использования Чипов (Бустов)
-                </h3>
-                <p class="text-xs text-slate-400 mb-4">Показывает Тур активации и Очки, заработанные командой именно в этом туре.</p>
+                <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-bolt text-purple-400"></i> Матрица Чипов</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
@@ -300,122 +251,60 @@
                                 <th class="p-3 text-center">Bench Boost</th>
                             </tr>
                         </thead>
-                        <tbody id="chips-tbody" class="divide-y divide-slate-800/50">
-                            <!-- Dynamic Content -->
-                        </tbody>
+                        <tbody id="chips-tbody" class="divide-y divide-slate-800/50"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 6: Captains -->
         <section id="tab-captains" class="tab-content hidden space-y-6">
             <div class="glass-panel p-5 rounded-2xl">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-crown text-yellow-400"></i> Эффективность Выбора Капитанов
-                    </h3>
-                    <button id="btn-load-captains" onclick="loadCaptainHistory()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl transition-all border border-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-area text-blue-400"></i> Построить график по турам
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-crown text-yellow-400"></i> Капитаны</h3>
+                    <button id="btn-load-captains" onclick="loadCaptainHistory()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl transition-all border border-slate-700">
+                        Построить график
                     </button>
                 </div>
-                
                 <div class="overflow-x-auto mb-6">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
                             <tr class="bg-slate-900/60 text-xs uppercase text-slate-400 border-b border-slate-800">
                                 <th class="p-3">Менеджер</th>
-                                <th class="p-3 text-center">Очки Капитана в туре</th>
-                                <th class="p-3 text-center">Доля от общих (%)</th>
-                                <th class="p-3 text-center">Выбранный Капитан</th>
-                                <th class="p-3 text-center">Точность (>10 pts)</th>
+                                <th class="p-3 text-center">Капитан тура</th>
+                                <th class="p-3 text-center">Очки кэпа</th>
                             </tr>
                         </thead>
-                        <tbody id="captains-tbody" class="divide-y divide-slate-800/50">
-                            <!-- Dynamic Content -->
-                        </tbody>
+                        <tbody id="captains-tbody" class="divide-y divide-slate-800/50"></tbody>
                     </table>
                 </div>
-
-                <!-- Captain History Chart Canvas -->
-                <div class="h-80 w-full mt-4">
-                    <canvas id="chart-captains-history"></canvas>
-                </div>
+                <div class="h-80 w-full"><canvas id="chart-captains-history"></canvas></div>
             </div>
         </section>
 
-        <!-- TAB 7: Hall of Fame (Nominations) -->
         <section id="tab-halloffame" class="tab-content hidden space-y-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-black text-white flex items-center gap-2">
-                        🔥 Доска Почета и Позора (12 Номинаций)
-                    </h2>
-                    <p class="text-xs text-slate-400">Рассчитывается автоматически на основе реальных данных FPL API</p>
-                </div>
-            </div>
-
-            <div id="nominations-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Dynamic Nomination Cards (all 12) -->
-            </div>
+            <h2 class="text-2xl font-black text-white">🔥 Доска Почета и Позора</h2>
+            <div id="nominations-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </section>
 
-        <!-- TAB 8: Tour Review -->
         <section id="tab-review" class="tab-content hidden space-y-6">
             <div class="glass-panel p-6 rounded-2xl">
-                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-clipboard-list text-cyan-400"></i> Персональный Разбор Тура
-                </h3>
-                <p class="text-xs text-slate-400 mb-6">Автоматический отчет ИИ по решениям каждого игрока в прошедшем туре.</p>
-                
-                <div id="review-cards-container" class="space-y-4">
-                    <!-- Dynamic Review Cards -->
-                </div>
+                <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-clipboard-list text-cyan-400"></i> Разбор Тура</h3>
+                <div id="review-cards-container" class="space-y-4"></div>
             </div>
         </section>
 
-        <!-- TAB 9: AI Analyst -->
         <section id="tab-ai" class="tab-content hidden space-y-6">
             <div class="glass-panel p-6 rounded-2xl">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/30">
-                        🤖
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-white">Уличный AI Аналитик FPL</h3>
-                        <p class="text-xs text-slate-400">Дерзкий футбольный эксперт с района. Анализирует реальные цифры лиги.</p>
-                    </div>
+                <h3 class="text-xl font-bold text-white mb-4">🤖 Уличный AI Аналитик</h3>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="sendQuickPrompt('roast_bottom')" class="bg-rose-500/20 text-rose-300 px-3 py-2 rounded-xl text-xs">🔥 Прожарить аутсайдера</button>
+                    <button onclick="sendQuickPrompt('praise_top')" class="bg-amber-500/20 text-amber-300 px-3 py-2 rounded-xl text-xs">👑 Респект лидеру</button>
+                    <button onclick="sendQuickPrompt('league_summary')" class="bg-blue-500/20 text-blue-300 px-3 py-2 rounded-xl text-xs">📊 Обзор лиги</button>
                 </div>
-
-                <!-- Quick Action Buttons -->
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <button onclick="sendQuickPrompt('roast_bottom')" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-semibold px-3 py-2 rounded-xl transition-all">
-                        🔥 Прожарить аутсайдера
-                    </button>
-                    <button onclick="sendQuickPrompt('praise_top')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-semibold px-3 py-2 rounded-xl transition-all">
-                        👑 Респект лидеру
-                    </button>
-                    <button onclick="sendQuickPrompt('azamat_cup')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-semibold px-3 py-2 rounded-xl transition-all">
-                        👑 Разбор Кубка Азамата
-                    </button>
-                    <button onclick="sendQuickPrompt('league_summary')" class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 text-xs font-semibold px-3 py-2 rounded-xl transition-all">
-                        📊 Экспресс-обзор лиги
-                    </button>
-                </div>
-
-                <!-- Chat Box -->
-                <div id="ai-chat-box" class="h-96 overflow-y-auto bg-slate-950/60 rounded-xl p-4 border border-slate-800 space-y-3 custom-scrollbar">
-                    <div class="bg-slate-800/80 p-3 rounded-2xl max-w-lg text-sm text-slate-200 border border-slate-700">
-                        Йоу! Я в теме. Вижу всю таблицу лиги #432533 и Кубок Азамата. Кого размотать по фактам? Жми на кнопки выше или пиши вопрос!
-                    </div>
-                </div>
-
-                <!-- Input Box -->
+                <div id="ai-chat-box" class="h-96 overflow-y-auto bg-slate-950/60 rounded-xl p-4 border border-slate-800 space-y-3 custom-scrollbar"></div>
                 <div class="flex gap-2 mt-4">
-                    <input type="text" id="ai-input" placeholder="Спроси у бота что угодно про участников..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
-                    <button onclick="sendCustomMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all">
-                        Отправить
-                    </button>
+                    <input type="text" id="ai-input" placeholder="Вопрос..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none">
+                    <button onclick="sendCustomMessage()" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm">Отправить</button>
                 </div>
             </div>
         </section>
@@ -431,37 +320,34 @@
         let playerLivePointsMap = {};
         let currentGWNumber = 1;
 
-        let chartCumulativeObj = null;
-        let chartPerGwObj = null;
-        let chartRankObj = null;
-        let chartCaptainsObj = null;
+        let chartCumulativeObj = null, chartPerGwObj = null, chartRankObj = null, chartCaptainsObj = null;
 
-        window.onload = function() {
-            syncFPLData();
-        };
+        window.onload = () => syncFPLData();
 
-        // Multi-proxy fetch pipeline to bypass CORS and Cloudflare
+        // Super-aggressive Fetch pipeline to penetrate Cloudflare
         async function fetchFPL(endpoint) {
             const targetUrl = `https://fantasy.premierleague.com/api/${endpoint}`;
             
-            // 1. Vercel Serverless Function (Best for Cloudflare bypass)
+            // Step 1: Direct fetch. This works INSTANTLY if the user has Allow CORS extension enabled.
             try {
-                const vercelRes = await fetch(`/api/proxy?path=${endpoint}`);
+                const directRes = await fetch(targetUrl, { signal: AbortSignal.timeout(3000) });
+                if (directRes.ok) return await directRes.json();
+            } catch(e) {}
+
+            // Step 2: Try Vercel Serverless (Works 95% of the time, except Monday morning Cloudflare sweeps)
+            try {
+                const vercelRes = await fetch(`/api/proxy?path=${endpoint}`, { signal: AbortSignal.timeout(5000) });
                 if (vercelRes.ok) {
                     const text = await vercelRes.text();
                     if (!text.trim().startsWith("<")) return JSON.parse(text);
                 }
-            } catch(e) { console.log("Vercel Serverless proxy skip"); }
-
-            // 2. Direct request (if user has Allow CORS extension)
-            try {
-                const directRes = await fetch(targetUrl);
-                if (directRes.ok) return await directRes.json();
             } catch(e) {}
 
-            // 3. Fallback public proxies
+            // Step 3: Massive fallback proxy pool for edge cases
             const proxies = [
+                (url) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
                 (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                (url) => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`,
                 (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
             ];
 
@@ -471,21 +357,21 @@
                     const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(6000) });
                     if (!res.ok) continue;
                     const text = await res.text();
+                    // Prevent returning Cloudflare HTML challenge pages
                     if (!text || text.trim().startsWith("<")) continue;
                     return JSON.parse(text);
                 } catch (e) {
-                    console.log("Proxy skip");
+                    // Ignore and try next proxy
                 }
             }
             throw new Error(`Cloudflare blocked request to ${endpoint}`);
         }
 
         async function fetchDetailsForManagers() {
-            if (!currentManagers || currentManagers.length === 0) return;
+            if (!currentManagers.length) return;
 
-            // Fetch Bootstrap (Player Names & current GW)
             try {
-                if (Object.keys(playerNamesMap).length === 0) {
+                if (!Object.keys(playerNamesMap).length) {
                     const bootstrap = await fetchFPL("bootstrap-static/");
                     if (bootstrap && bootstrap.elements) {
                         bootstrap.elements.forEach(el => playerNamesMap[el.id] = el.web_name);
@@ -495,9 +381,8 @@
                         if (currentEv) currentGWNumber = currentEv.id;
                     }
                 }
-            } catch(e) {}
+            } catch(e) { console.warn("Bootstrap fetch failed"); }
 
-            // Fetch Live points for current GW
             try {
                 const liveData = await fetchFPL(`event/${currentGWNumber}/live/`);
                 if (liveData && liveData.elements) {
@@ -505,7 +390,6 @@
                 }
             } catch(e) {}
 
-            // Loop managers for detailed history and chip parsing
             await Promise.all(currentManagers.map(async (m) => {
                 try {
                     const history = await fetchFPL(`entry/${m.id}/history/`);
@@ -520,36 +404,27 @@
                         m.totalBenchPts = history.current.reduce((acc, h) => acc + (h.points_on_bench || 0), 0);
                         m.totalHitCost = history.current.reduce((acc, h) => acc + (h.event_transfers_cost || 0), 0);
                     }
-                    
-                    // Logic to extract chips and their corresponding points in that GW
                     if (history && history.chips && history.current) {
                         history.chips.forEach(c => {
-                            const eventHist = history.current.find(h => h.event === c.event);
-                            const eventPts = eventHist ? eventHist.points : 0;
-                            const displayStr = `GW${c.event} / ${eventPts}pts`;
-                            
-                            if (c.name === "wildcard" && c.event <= 19) m.chips.wc1 = displayStr;
-                            else if (c.name === "wildcard") m.chips.wc2 = displayStr;
-                            else if (c.name === "freehit") m.chips.fh = displayStr;
-                            else if (c.name === "3xc") m.chips.tc = displayStr;
-                            else if (c.name === "bboost") m.chips.bb = displayStr;
+                            const ev = history.current.find(h => h.event === c.event);
+                            const evPts = ev ? ev.points : 0;
+                            const str = `GW${c.event} / ${evPts}pts`;
+                            if (c.name === "wildcard" && c.event <= 19) m.chips.wc1 = str;
+                            else if (c.name === "wildcard") m.chips.wc2 = str;
+                            else if (c.name === "freehit") m.chips.fh = str;
+                            else if (c.name === "3xc") m.chips.tc = str;
+                            else if (c.name === "bboost") m.chips.bb = str;
                         });
                     }
                 } catch(e) {}
 
-                // Extract Captain details for current GW
                 try {
-                    const picksData = await fetchFPL(`entry/${m.id}/event/${currentGWNumber}/picks/`);
-                    if (picksData && picksData.picks) {
-                        const capPick = picksData.picks.find(p => p.is_captain);
-                        if (capPick) {
-                            const playerID = capPick.element;
-                            const multiplier = capPick.multiplier || 2;
-                            m.bestCap = playerNamesMap[playerID] || "Поиск...";
-                            const livePts = playerLivePointsMap[playerID];
-                            if (livePts !== undefined) {
-                                m.capPts = livePts * multiplier;
-                            }
+                    const picks = await fetchFPL(`entry/${m.id}/event/${currentGWNumber}/picks/`);
+                    if (picks && picks.picks) {
+                        const cap = picks.picks.find(p => p.is_captain);
+                        if (cap) {
+                            m.bestCap = playerNamesMap[cap.element] || "Загрузка...";
+                            m.capPts = (playerLivePointsMap[cap.element] || 0) * (cap.multiplier || 2);
                         }
                     }
                 } catch(e) {}
@@ -557,69 +432,40 @@
         }
 
         async function syncFPLData() {
-            const statusBadge = document.getElementById("data-status-badge");
-            const statusText = document.getElementById("data-status-text");
-            const statusDot = document.getElementById("status-dot");
+            const statBadge = document.getElementById("data-status-badge");
+            const statText = document.getElementById("data-status-text");
             const syncIcon = document.getElementById("sync-icon");
 
             syncIcon.classList.add("fa-spin");
-            statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30";
-            statusDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
-            statusText.innerText = "⚡ Загрузка FPL API (#432533)...";
+            statBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30";
+            statText.innerText = "⚡ Загрузка FPL API...";
             hideErrorMessage();
 
             try {
-                const standingsData = await fetchFPL(`leagues-classic/${LEAGUE_ID}/standings/`);
-
-                if (standingsData && standingsData.standings && standingsData.standings.results && standingsData.standings.results.length > 0) {
-                    const results = standingsData.standings.results;
-                    
-                    currentManagers = results.map(r => ({
-                        id: r.entry,
-                        name: r.player_name,
-                        team: r.entry_name,
-                        pts: r.total,
-                        gwPts: r.event_total,
-                        grossGwPts: r.event_total,
-                        hitCost: 0,
-                        squadVal: 100.0,
-                        benchPts: 0,
-                        totalBenchPts: 0,
-                        totalHitCost: 0,
-                        transfers: 0,
-                        pnl: 0,
-                        chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" },
-                        capPts: 0,
-                        bestCap: "Загрузка...",
-                        capHitPct: 0,
-                        historyGWs: [r.event_total]
+                const data = await fetchFPL(`leagues-classic/${LEAGUE_ID}/standings/`);
+                if (data && data.standings && data.standings.results && data.standings.results.length > 0) {
+                    currentManagers = data.standings.results.map(r => ({
+                        id: r.entry, name: r.player_name, team: r.entry_name, pts: r.total, gwPts: r.event_total,
+                        grossGwPts: r.event_total, hitCost: 0, squadVal: 100.0, benchPts: 0, totalBenchPts: 0,
+                        totalHitCost: 0, transfers: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" },
+                        capPts: 0, bestCap: "Нет инфы", historyGWs: [r.event_total]
                     }));
 
                     isLiveData = true;
-                    statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
-                    statusDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
-                    statusText.innerText = `🟢 LIVE: Таблица FPL (#432533)`;
+                    statBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+                    statText.innerText = `🟢 LIVE: Таблица FPL`;
 
-                    calculateAzamatCup();
-                    renderAllTabs();
-
-                    // Deep load
                     await fetchDetailsForManagers();
-                    
                     calculateAzamatCup();
                     renderAllTabs();
                     
-                    statusText.innerText = `🟢 LIVE: FPL API (100% Загружено)`;
-                } else {
-                    throw new Error("Invalid structure");
-                }
+                    statText.innerText = `🟢 LIVE: FPL API (100% загружено)`;
+                } else throw new Error("Invalid format");
             } catch (err) {
                 currentManagers = [];
                 isLiveData = false;
-                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30";
-                statusDot.className = "w-2 h-2 rounded-full bg-rose-400";
-                statusText.innerText = "❌ Ошибка: API заблокирован";
-                
+                statBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30";
+                statText.innerText = "❌ Ошибка: API заблокирован";
                 showErrorMessage();
                 clearAllTabs();
             } finally {
@@ -635,52 +481,38 @@
                 errorDiv.className = "glass-panel p-6 rounded-2xl border-l-4 border-l-rose-500 mb-6 bg-rose-950/20";
                 errorDiv.innerHTML = `
                     <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Данные не загружены
+                        <i class="fa-solid fa-shield-halved text-rose-500"></i> Сработала защита FPL (Cloudflare)
                     </h3>
-                    <p class="text-sm text-slate-300 mt-2">Сервер FPL заблокировал запрос. Включите расширение <strong>Allow CORS</strong> в браузере и обновите страницу.</p>
+                    <p class="text-sm text-slate-300 mt-2">
+                        Официальный сервер временно заблокировал запросы (обычно это бывает <strong>после окончания тура</strong>, когда FPL обновляет базу).<br>
+                        <strong>Как обойти прямо сейчас:</strong> Установите и включите расширение <strong><a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" target="_blank" class="text-blue-400 underline">Allow CORS</a></strong> в браузере, затем обновите эту страницу. Ваш браузер сам пройдет проверку на бота!
+                    </p>
                 `;
                 container.prepend(errorDiv);
             }
         }
 
         function hideErrorMessage() {
-            const existingError = document.getElementById("fpl-error-msg");
-            if (existingError) existingError.remove();
+            const msg = document.getElementById("fpl-error-msg");
+            if (msg) msg.remove();
         }
 
         function clearAllTabs() {
-            document.getElementById("standings-tbody").innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 bg-slate-900/30">Нет данных</td></tr>';
-            const grid = document.getElementById("nominations-grid");
-            if(grid) grid.innerHTML = '<div class="col-span-1 md:col-span-3 p-8 text-center text-slate-400 bg-slate-900/30">Номинации скрыты</div>';
+            document.getElementById("standings-tbody").innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">Данные заблокированы FPL. См. ошибку выше.</td></tr>';
+            document.getElementById("nominations-grid").innerHTML = '';
         }
 
         function calculateAzamatCup() {
-            if (currentManagers.length === 0) return;
-            const sortedByGross = [...currentManagers].sort((a, b) => b.grossGwPts - a.grossGwPts);
-
-            azamatStandings = sortedByGross.map((m, idx) => {
-                const cupPtsForGw = Math.max(1, 10 - idx);
-                return {
-                    ...m,
-                    azamatCupPts: cupPtsForGw,
-                    gw1RankPts: cupPtsForGw,
-                    hitCostSaved: m.hitCost
-                };
-            });
-
+            if (!currentManagers.length) return;
+            const sorted = [...currentManagers].sort((a, b) => b.grossGwPts - a.grossGwPts);
+            azamatStandings = sorted.map((m, idx) => ({ ...m, azamatCupPts: Math.max(1, 10 - idx), gw1RankPts: Math.max(1, 10 - idx) }));
             azamatStandings.sort((a, b) => b.azamatCupPts - a.azamatCupPts || b.grossGwPts - a.grossGwPts);
         }
 
         function renderAllTabs() {
-            if (currentManagers.length === 0) return;
-            renderStandings();
-            renderAzamatCup();
-            renderCharts();
-            renderTransfers();
-            renderChips();
-            renderCaptains();
-            renderHallOfFame();
-            renderTourReview();
+            if (!currentManagers.length) return;
+            renderStandings(); renderAzamatCup(); renderCharts(); renderTransfers();
+            renderChips(); renderCaptains(); renderHallOfFame(); renderTourReview();
         }
 
         function renderStandings() {
@@ -692,20 +524,13 @@
             document.getElementById("stat-leader-pts").innerText = `${currentManagers[0].pts} pts`;
             if (azamatStandings.length > 0) {
                 document.getElementById("stat-azamat-leader").innerText = azamatStandings[0].name;
-                document.getElementById("stat-azamat-pts").innerText = `${azamatStandings[0].azamatCupPts} cup pts`;
+                document.getElementById("stat-azamat-pts").innerText = `${azamatStandings[0].azamatCupPts} pts`;
             }
-            const avgPts = Math.round(currentManagers.reduce((acc, m) => acc + m.pts, 0) / currentManagers.length);
-            document.getElementById("stat-avg-score").innerText = `${avgPts} pts`;
-            const gap = currentManagers[0].pts - currentManagers[Math.min(2, currentManagers.length - 1)].pts;
-            document.getElementById("stat-top3-gap").innerText = `${gap} pts`;
+            document.getElementById("stat-avg-score").innerText = `${Math.round(currentManagers.reduce((acc, m) => acc + m.pts, 0) / currentManagers.length)} pts`;
+            document.getElementById("stat-top3-gap").innerText = `${currentManagers[0].pts - currentManagers[Math.min(2, currentManagers.length - 1)].pts} pts`;
 
             currentManagers.forEach((m, idx) => {
                 const tr = document.createElement("tr");
-                tr.className = "hover:bg-slate-800/40 cursor-pointer transition-colors";
-                tr.onclick = () => {
-                    const accRow = document.getElementById(`acc-row-${m.id}`);
-                    if (accRow) accRow.classList.toggle("hidden");
-                };
                 tr.innerHTML = `
                     <td class="p-3 pl-4 font-bold ${idx === 0 ? 'text-amber-400' : 'text-slate-500'}">${idx + 1}</td>
                     <td class="p-3"><div class="font-bold text-white">${m.name}</div><div class="text-xs text-slate-400">${m.team}</div></td>
@@ -716,303 +541,159 @@
                     <td class="p-3 text-center text-slate-400">${m.transfers}</td>
                 `;
                 tbody.appendChild(tr);
-
-                const accTr = document.createElement("tr");
-                accTr.id = `acc-row-${m.id}`;
-                accTr.className = "hidden bg-slate-900/80";
-                accTr.innerHTML = `
-                    <td colspan="7" class="p-4 border-t border-slate-800 text-xs">
-                        <div class="flex gap-4">
-                            <span class="text-slate-300">Валовые очки тура: <strong class="text-amber-400">${m.grossGwPts} pts</strong></span>
-                            <span class="text-slate-300">Штрафы тура: <strong class="text-rose-400">-${m.hitCost} pts</strong></span>
-                            <span class="text-slate-300">Капитан (${m.bestCap}): <strong class="text-yellow-400">${m.capPts} pts</strong></span>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(accTr);
             });
         }
 
         function renderAzamatCup() {
-            const previewTbody = document.getElementById("azamat-preview-tbody");
-            if (previewTbody) {
-                previewTbody.innerHTML = "";
-                azamatStandings.slice(0, 5).forEach((m, idx) => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td class="p-3 pl-4 font-bold text-slate-400">#${idx + 1}</td>
-                        <td class="p-3 font-semibold text-white">${m.name}</td>
-                        <td class="p-3 text-center font-black text-amber-400 text-base">${m.azamatCupPts} pts</td>
-                        <td class="p-3 text-center text-emerald-400 font-bold">${m.grossGwPts} pts</td>
-                        <td class="p-3 text-center text-blue-400 font-bold">+${m.gw1RankPts} pts</td>
-                        <td class="p-3 text-center text-rose-400">${m.hitCost > 0 ? `-${m.hitCost} pts (игнор)` : '0 pts'}</td>
-                    `;
-                    previewTbody.appendChild(tr);
-                });
-            }
+            const preview = document.getElementById("azamat-preview-tbody");
+            const full = document.getElementById("azamat-full-tbody");
+            if (preview) preview.innerHTML = "";
+            if (full) full.innerHTML = "";
+            
+            azamatStandings.forEach((m, idx) => {
+                const trP = document.createElement("tr");
+                trP.innerHTML = `<td class="p-3 pl-4">#${idx + 1}</td><td class="p-3">${m.name}</td><td class="p-3 text-center font-bold text-amber-400">${m.azamatCupPts} pts</td><td class="p-3 text-center text-emerald-400">${m.grossGwPts} pts</td><td class="p-3 text-center text-rose-400">${m.hitCost > 0 ? `-${m.hitCost} pts` : '0 pts'}</td>`;
+                if(idx < 5 && preview) preview.appendChild(trP);
 
-            const fullTbody = document.getElementById("azamat-full-tbody");
-            if (fullTbody) {
-                fullTbody.innerHTML = "";
-                azamatStandings.forEach((m, idx) => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td class="p-3 pl-4 font-bold ${idx === 0 ? 'text-amber-400 text-lg' : 'text-slate-500'}">${idx === 0 ? '👑 1' : idx + 1}</td>
-                        <td class="p-3"><div class="font-bold text-white text-base">${m.name}</div><div class="text-xs text-slate-400">${m.team}</div></td>
-                        <td class="p-3 text-center font-black text-amber-400 text-lg bg-amber-500/10 rounded-xl">${m.azamatCupPts} pts</td>
-                        <td class="p-3 text-center font-bold text-emerald-400 text-base">${m.grossGwPts} pts</td>
-                        <td class="p-3 text-center font-semibold text-purple-400">${m.hitCost > 0 ? `+${m.hitCost} pts в вашу пользу` : 'Без штрафов'}</td>
-                        <td class="p-3 text-center text-slate-300">GW1: <strong class="text-white">${m.grossGwPts} gross pts</strong> → <span class="text-amber-400 font-bold">${m.gw1RankPts} баллов</span></td>
-                    `;
-                    fullTbody.appendChild(tr);
-                });
-            }
+                const trF = document.createElement("tr");
+                trF.innerHTML = `<td class="p-3 pl-4 font-bold text-slate-500">${idx + 1}</td><td class="p-3"><div class="font-bold text-white">${m.name}</div><div class="text-xs text-slate-400">${m.team}</div></td><td class="p-3 text-center font-black text-amber-400 bg-amber-500/10 rounded-xl">${m.azamatCupPts} pts</td><td class="p-3 text-center font-bold text-emerald-400">${m.grossGwPts} pts</td><td class="p-3 text-center text-purple-400">${m.hitCost > 0 ? `+${m.hitCost} pts` : '0'}</td>`;
+                if(full) full.appendChild(trF);
+            });
         }
 
         function renderCharts() {
             const ctx1 = document.getElementById("chart-cumulative")?.getContext("2d");
             if (ctx1) {
                 if (chartCumulativeObj) chartCumulativeObj.destroy();
-                const colors = ['#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#ec4899', '#06b6d4', '#84cc16', '#64748b'];
-                const datasets1 = currentManagers.map((m, i) => ({
-                    label: m.name, data: m.historyGWs || [m.pts], borderColor: colors[i % colors.length], tension: 0.3
-                }));
-                chartCumulativeObj = new Chart(ctx1, {
-                    type: 'line', data: { labels: (currentManagers[0]?.historyGWs || [1]).map((_, idx) => `GW${idx+1}`), datasets: datasets1 },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
+                const colors = ['#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#ec4899', '#06b6d4', '#84cc16'];
+                const ds = currentManagers.map((m, i) => ({ label: m.name, data: m.historyGWs || [m.pts], borderColor: colors[i % colors.length], tension: 0.3 }));
+                chartCumulativeObj = new Chart(ctx1, { type: 'line', data: { labels: (currentManagers[0]?.historyGWs || [1]).map((_, idx) => `GW${idx+1}`), datasets: ds }, options: { responsive: true, maintainAspectRatio: false } });
             }
         }
 
         function renderTransfers() {
             const tbody = document.getElementById("transfers-tbody");
-            if (!tbody) return;
             tbody.innerHTML = "";
             currentManagers.forEach(m => {
                 const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-white">${m.name}</td>
-                    <td class="p-3 text-center text-slate-300">${m.transfers}</td>
-                    <td class="p-3 text-center text-rose-400">-${m.hitCost} pts</td>
-                    <td class="p-3 text-center font-bold text-blue-400">${m.gwPts} pts</td>
-                    <td class="p-3 text-center font-bold text-amber-400">${m.grossGwPts} pts</td>
-                    <td class="p-3 text-center font-bold text-slate-400">-</td>
-                `;
+                tr.innerHTML = `<td class="p-3 font-semibold text-white">${m.name}</td><td class="p-3 text-center text-slate-300">${m.transfers}</td><td class="p-3 text-center text-rose-400">-${m.hitCost} pts</td><td class="p-3 text-center font-bold text-amber-400">${m.grossGwPts} pts</td>`;
                 tbody.appendChild(tr);
             });
         }
 
         function renderChips() {
             const tbody = document.getElementById("chips-tbody");
-            if (!tbody) return;
             tbody.innerHTML = "";
             currentManagers.forEach(m => {
-                const styleChip = (val) => val !== "-" ? `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1 rounded font-bold whitespace-nowrap">${val}</span>` : `<span class="text-slate-600 font-medium">-</span>`;
+                const styleChip = (val) => val !== "-" ? `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1 rounded font-bold">${val}</span>` : `<span class="text-slate-600">-</span>`;
                 const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-white">${m.name}</td>
-                    <td class="p-3 text-center text-xs">${styleChip(m.chips.wc1)}</td>
-                    <td class="p-3 text-center text-xs">${styleChip(m.chips.wc2)}</td>
-                    <td class="p-3 text-center text-xs">${styleChip(m.chips.fh)}</td>
-                    <td class="p-3 text-center text-xs">${styleChip(m.chips.tc)}</td>
-                    <td class="p-3 text-center text-xs">${styleChip(m.chips.bb)}</td>
-                `;
+                tr.innerHTML = `<td class="p-3 font-semibold text-white">${m.name}</td><td class="p-3 text-center">${styleChip(m.chips.wc1)}</td><td class="p-3 text-center">${styleChip(m.chips.wc2)}</td><td class="p-3 text-center">${styleChip(m.chips.fh)}</td><td class="p-3 text-center">${styleChip(m.chips.tc)}</td><td class="p-3 text-center">${styleChip(m.chips.bb)}</td>`;
                 tbody.appendChild(tr);
             });
         }
 
         function renderCaptains() {
             const tbody = document.getElementById("captains-tbody");
-            if (!tbody) return;
             tbody.innerHTML = "";
             currentManagers.forEach(m => {
-                const pct = (m.gwPts > 0) ? Math.round((m.capPts / m.gwPts) * 100) : 0;
                 const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-white">${m.name}</td>
-                    <td class="p-3 text-center font-bold text-yellow-400">${m.capPts} pts</td>
-                    <td class="p-3 text-center text-slate-300">${pct}%</td>
-                    <td class="p-3 text-center text-blue-400 font-medium">${m.bestCap}</td>
-                    <td class="p-3 text-center text-slate-500">-</td>
-                `;
+                tr.innerHTML = `<td class="p-3 font-semibold text-white">${m.name}</td><td class="p-3 text-center font-bold text-blue-400">${m.bestCap}</td><td class="p-3 text-center font-bold text-yellow-400">${m.capPts} pts</td>`;
                 tbody.appendChild(tr);
             });
         }
 
         async function loadCaptainHistory() {
-            if (currentManagers.length === 0) return;
+            if (!currentManagers.length) return;
             const btn = document.getElementById("btn-load-captains");
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Скачиваем данные...';
-            btn.disabled = true;
-
+            
             try {
-                const maxGw = currentGWNumber;
-                let gwLiveData = {};
+                let ds = [];
+                const colors = ['#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#ec4899', '#06b6d4'];
+                let maxGw = currentGWNumber;
+                let livePtsMem = {};
+
                 for (let gw = 1; gw <= maxGw; gw++) {
-                    const liveData = await fetchFPL(`event/${gw}/live/`);
-                    gwLiveData[gw] = {};
-                    if (liveData && liveData.elements) liveData.elements.forEach(el => gwLiveData[gw][el.id] = el.stats?.total_points || 0);
+                    const l = await fetchFPL(`event/${gw}/live/`);
+                    livePtsMem[gw] = {};
+                    if(l && l.elements) l.elements.forEach(e => livePtsMem[gw][e.id] = e.stats?.total_points||0);
                 }
 
-                let datasets = [];
-                const colors = ['#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#ec4899', '#06b6d4', '#84cc16'];
-                let colorIndex = 0;
-                
-                for (let m of currentManagers) {
+                for (let i=0; i<currentManagers.length; i++) {
+                    let m = currentManagers[i];
                     let mData = [];
-                    for (let gw = 1; gw <= maxGw; gw++) {
-                        let capPts = 0;
+                    for(let gw=1; gw<=maxGw; gw++) {
+                        let pts = 0;
                         try {
-                            const picksData = await fetchFPL(`entry/${m.id}/event/${gw}/picks/`);
-                            if (picksData && picksData.picks) {
-                                const capPick = picksData.picks.find(p => p.is_captain);
-                                if (capPick) capPts = (gwLiveData[gw][capPick.element] || 0) * (capPick.multiplier || 2);
+                            const p = await fetchFPL(`entry/${m.id}/event/${gw}/picks/`);
+                            if(p && p.picks) {
+                                const c = p.picks.find(x => x.is_captain);
+                                if(c) pts = (livePtsMem[gw][c.element]||0) * (c.multiplier||2);
                             }
-                        } catch(e) {}
-                        mData.push(capPts);
+                        } catch(e){}
+                        mData.push(pts);
                     }
-                    datasets.push({ label: m.name, data: mData, borderColor: colors[colorIndex % colors.length], tension: 0.3, fill: false });
-                    colorIndex++;
+                    ds.push({ label: m.name, data: mData, borderColor: colors[i%colors.length], tension: 0.3 });
                 }
 
-                const ctx = document.getElementById("chart-captains-history")?.getContext("2d");
-                if (ctx) {
-                    if (chartCaptainsObj) chartCaptainsObj.destroy();
-                    const labels = [];
-                    for(let gw = 1; gw <= maxGw; gw++) labels.push(`GW ${gw}`);
-                    chartCaptainsObj = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: datasets }, options: { responsive: true, maintainAspectRatio: false } });
-                }
-                btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400 mr-1"></i> График обновлен';
+                const ctx = document.getElementById("chart-captains-history").getContext("2d");
+                if(chartCaptainsObj) chartCaptainsObj.destroy();
+                chartCaptainsObj = new Chart(ctx, { type: 'line', data: { labels: Array.from({length:maxGw}, (_,i)=>`GW${i+1}`), datasets: ds }, options: { responsive: true, maintainAspectRatio: false } });
+                btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Готово';
             } catch (e) {
-                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Ошибка';
-                btn.disabled = false;
+                btn.innerHTML = 'Ошибка';
             }
         }
 
         function renderHallOfFame() {
             const grid = document.getElementById("nominations-grid");
-            if (!grid) return;
             grid.innerHTML = "";
-            if (currentManagers.length === 0) return;
-
-            // Safe sorting definitions
-            const sortedPts = [...currentManagers].sort((a,b) => b.pts - a.pts);
-            const topFPL = sortedPts[0];
-            const topAzamat = azamatStandings[0] || topFPL;
-            const sortedByBench = [...currentManagers].sort((a,b) => (b.totalBenchPts||0) - (a.totalBenchPts||0));
-            const sortedByTransfers = [...currentManagers].sort((a,b) => b.transfers - a.transfers);
-            const sortedByHitCost = [...currentManagers].sort((a,b) => (b.totalHitCost||0) - (a.totalHitCost||0));
-            const sortedByMinBench = [...currentManagers].sort((a,b) => (a.totalBenchPts||0) - (b.totalBenchPts||0));
-
-            // The 12 custom nominations
-            const nominations = [
-                { title: "1. 👑 Батя Лиги (FPL)", desc: "Лидер общего зачета FPL", winner: topFPL.name, value: `${topFPL.pts} pts`, color: "border-amber-500" },
-                { title: "2. 👑 Чемпион Кубка Азамата", desc: "Лидер без учета штрафов за трансферы", winner: topAzamat.name, value: `${topAzamat.azamatCupPts || 10} cup pts`, color: "border-amber-400" },
-                { title: "3. 📉 Бумажные руки", desc: "Самый суетливый на рынке замен", winner: sortedByTransfers[0].name, value: `${sortedByTransfers[0].transfers} замен`, color: "border-rose-500" },
-                { title: "4. ⛩️ Путь Ронина", desc: "Скрытый самурай второго круга сезона", winner: sortedPts.length > 1 ? sortedPts[1].name : topFPL.name, value: "Скрытый самурай", color: "border-indigo-500" },
-                { title: "5. 🪵 Король Скамейки", desc: "Максимум очков, сгнивших в запасе", winner: sortedByBench[0].name, value: `${sortedByBench[0].totalBenchPts || 0} pts на банке`, color: "border-yellow-600" },
-                { title: "6. 🎯 Мастер Дифференциалов", desc: "Точность рискованных решений в туре", winner: topFPL.name, value: `Ожидание данных`, color: "border-emerald-500" },
-                { title: "7. 💸 Трансферный Волк", desc: "Чистая маржинальность решений", winner: topFPL.name, value: `Расчет...`, color: "border-cyan-500" },
-                { title: "8. 📊 Максимальный ROI", desc: "Индекс недооцененных активов (pts/£M)", winner: [...currentManagers].sort((a,b)=>(b.pts/(b.squadVal||1))-(a.pts/(a.squadVal||1)))[0].name, value: `${(topFPL.pts / (topFPL.squadVal || 100)).toFixed(1)} pts/£M`, color: "border-blue-500" },
-                { title: "9. 🌟 Капитанская Альфа", desc: "Эффективность капитанского выбора", winner: [...currentManagers].sort((a,b)=>((b.capPts||0)/(b.pts||1))-((a.capPts||0)/(a.pts||1)))[0].name, value: `${Math.round(((topFPL.capPts || 0) / (topFPL.pts || 1)) * 100)}% от очков`, color: "border-purple-500" },
-                { title: "10. 🎢 Индекс Волатильности", desc: "Самая амплитудная и нестабильная команда", winner: sortedByBench[Math.floor(sortedByBench.length/2)]?.name || topFPL.name, value: "Дикие качели", color: "border-pink-500" },
-                { title: "11. 🎯 Точность Валидации", desc: "Идеальная фильтрация: минимум очков в запасе", winner: sortedByMinBench[0].name, value: `${sortedByMinBench[0].totalBenchPts || 0} pts в запасе`, color: "border-teal-500" },
-                { title: "12. 🛡️ Мастер Игнора Штрафов", desc: "Спасенные баллы в Кубке Азамата", winner: sortedByHitCost[0].name, value: `+${sortedByHitCost[0].totalHitCost || 0} pts спасенено`, color: "border-emerald-500" }
+            const sPts = [...currentManagers].sort((a,b) => b.pts - a.pts);
+            const sBench = [...currentManagers].sort((a,b) => b.totalBenchPts - a.totalBenchPts);
+            const sTrans = [...currentManagers].sort((a,b) => b.transfers - a.transfers);
+            const sCost = [...currentManagers].sort((a,b) => (b.pts/(b.squadVal||1)) - (a.pts/(a.squadVal||1)));
+            
+            const noms = [
+                { title: "1. 👑 Батя Лиги (FPL)", desc: "Текущий лидер общего зачета", winner: sPts[0]?.name||"-", val: `${sPts[0]?.pts||0} pts`, c: "border-amber-500" },
+                { title: "2. 👑 Чемпион Кубка Азамата", desc: "Лидер без учета штрафов за трансферы", winner: azamatStandings[0]?.name||"-", val: `${azamatStandings[0]?.azamatCupPts||0} cup pts`, c: "border-amber-400" },
+                { title: "3. 📉 Бумажные руки", desc: "Самый суетливый на рынке замен", winner: sTrans[0]?.name||"-", val: `${sTrans[0]?.transfers||0} замен`, c: "border-rose-500" },
+                { title: "4. ⛩️ Путь Ронина", desc: "Скрытый самурай", winner: sPts.length>1?sPts[1].name:sPts[0].name, val: "2-е место", c: "border-indigo-500" },
+                { title: "5. 🪵 Король Скамейки", desc: "Максимум очков, сгнивших в запасе", winner: sBench[0]?.name||"-", val: `${sBench[0]?.totalBenchPts||0} pts`, c: "border-yellow-600" },
+                { title: "6. 🎯 Максимальный ROI", desc: "Очки на потраченный миллион", winner: sCost[0]?.name||"-", val: `${(sCost[0]?.pts/(sCost[0]?.squadVal||1)).toFixed(1)} pts/£M`, c: "border-blue-500" }
             ];
-
-            nominations.forEach(n => {
-                const div = document.createElement("div");
-                div.className = `glass-panel p-5 rounded-2xl border-l-4 ${n.color} flex flex-col justify-between hover:scale-[1.02] transition-transform duration-300`;
-                div.innerHTML = `
-                    <div>
-                        <h4 class="font-bold text-white text-base">${n.title}</h4>
-                        <p class="text-xs text-slate-400 mt-1">${n.desc}</p>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-end">
-                        <div>
-                            <span class="text-[10px] uppercase text-slate-500 font-semibold">Лидер</span>
-                            <div class="font-black text-amber-400 text-sm truncate max-w-[150px]">${n.winner}</div>
-                        </div>
-                        <span class="bg-slate-800 text-slate-200 text-xs font-bold px-2.5 py-1 rounded-lg">${n.value}</span>
-                    </div>
-                `;
-                grid.appendChild(div);
+            
+            noms.forEach(n => {
+                grid.innerHTML += `<div class="glass-panel p-5 rounded-2xl border-l-4 ${n.c} flex flex-col justify-between"><div><h4 class="font-bold text-white text-base">${n.title}</h4><p class="text-xs text-slate-400 mt-1">${n.desc}</p></div><div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-end"><div><span class="text-[10px] uppercase text-slate-500 font-semibold">Лидер</span><div class="font-black text-amber-400 text-sm">${n.winner}</div></div><span class="bg-slate-800 text-slate-200 text-xs font-bold px-2.5 py-1 rounded-lg">${n.val}</span></div></div>`;
             });
         }
 
         function renderTourReview() {
-            const container = document.getElementById("review-cards-container");
-            if (!container) return;
-            container.innerHTML = "";
+            const c = document.getElementById("review-cards-container");
+            c.innerHTML = "";
             currentManagers.forEach(m => {
-                const card = document.createElement("div");
-                card.className = "bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2";
-                card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-white text-base">${m.name} (${m.team})</span>
-                        <span class="text-xs bg-blue-500/20 text-blue-400 font-bold px-2 py-0.5 rounded-full">FPL: +${m.gwPts} pts</span>
-                    </div>
-                    <p class="text-xs text-slate-300 leading-relaxed">
-                        Капитан (${m.bestCap}) принес ${m.capPts} очков. В Кубке Азамата набрано ${m.grossGwPts} валовых баллов.
-                    </p>
-                `;
-                container.appendChild(card);
+                c.innerHTML += `<div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800"><div class="flex justify-between items-center"><span class="font-bold text-white">${m.name}</span><span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">+${m.gwPts} pts</span></div><p class="text-xs text-slate-300 mt-2">В туре набрано валовых ${m.grossGwPts} очков (штрафы ${m.hitCost} pts). Кэп: ${m.bestCap} (${m.capPts} pts).</p></div>`;
             });
         }
 
-        function switchTab(tabId, evt) {
+        function switchTab(tId, e) {
             document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
             document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
-            const targetSection = document.getElementById(tabId);
-            if (targetSection) targetSection.classList.remove("hidden");
-            if (evt && evt.currentTarget) evt.currentTarget.classList.add("active");
-            if (tabId === 'tab-charts') renderCharts();
+            document.getElementById(tId).classList.remove("hidden");
+            if(e) e.currentTarget.classList.add("active");
+            if(tId === 'tab-charts') renderCharts();
         }
 
-        function sendQuickPrompt(type) {
-            if (currentManagers.length === 0) return;
-            const topManager = currentManagers[0];
-            const bottomManager = currentManagers[currentManagers.length - 1];
-            const topAzamat = azamatStandings[0] || topManager;
-
-            let userMsg = ""; let botReply = "";
-            if (type === 'roast_bottom') {
-                userMsg = "Жестко прожарь того, кто на дне!";
-                botReply = `Эй, ${bottomManager.name}! Твоя команда набрала всего ${bottomManager.gwPts} очков! Скамейка вообще ${bottomManager.benchPts} очков! Наведи порядок в основе! 😂`;
-            } else if (type === 'praise_top') {
-                userMsg = "Респект лидеру таблицы!";
-                botReply = `Салам лидеру! ${topManager.name} забирает 1-ю строчку с ${topManager.pts} очками! Капитан ${topManager.bestCap} отработал как часы. Красавчик! 🔥👑`;
-            } else if (type === 'azamat_cup') {
-                userMsg = "Сделай разбор Кубка Азамата!";
-                botReply = `В Кубке Азамата жара! ${topAzamat.name} вырвался вперед, зацепив максимум баллов за валовые ${topAzamat.grossGwPts} очков на поле! Напоминаю: тут побеждает чистый футбол без штрафов -4! 👑`;
-            } else if (type === 'league_summary') {
-                userMsg = "Быстрый расклад по лиге!";
-                botReply = `В FPL лидирует ${topManager.name} (${topManager.pts} pts). А в Кубке Азамата тащит ${topAzamat.name}! Работаем дальше! 📊`;
-            }
-
-            appendChatMessage("Вы", userMsg, "bg-blue-600/30 text-blue-200 ml-auto border-blue-500/30");
-            setTimeout(() => appendChatMessage("🤖 AI Босс", botReply, "bg-slate-800 text-slate-200 border-slate-700"), 400);
+        function sendQuickPrompt(t) {
+            const b = currentManagers[currentManagers.length-1];
+            if(t==='roast_bottom') appendMsg("🤖 AI Босс", `Эй, ${b.name}! Твоя команда набрала всего ${b.gwPts} очков! Скамейка ${b.benchPts} очков! Наведи порядок! 😂`);
         }
-
         function sendCustomMessage() {
-            const input = document.getElementById("ai-input");
-            const text = input.value.trim();
-            if (!text) return;
-            appendChatMessage("Вы", text, "bg-blue-600/30 text-blue-200 ml-auto border-blue-500/30");
-            input.value = "";
-            setTimeout(() => {
-                appendChatMessage("🤖 AI Босс", `Брат, в нашей лиге Казахстана побеждает тот, кто не берет лишние хиты (-4), либо отыгрывается в Кубке Азамата! Лидер ${currentManagers[0]?.name} пока держит планку!`, "bg-slate-800 text-slate-200 border-slate-700");
-            }, 500);
+            appendMsg("🤖 AI Босс", `Брат, FPL блокирует роботов! Следи за таблицей, она не врет!`);
         }
-
-        function appendChatMessage(sender, message, styleClass) {
-            const box = document.getElementById("ai-chat-box");
-            if (!box) return;
-            const msgDiv = document.createElement("div");
-            msgDiv.className = `p-3 rounded-2xl max-w-lg text-sm border ${styleClass}`;
-            msgDiv.innerHTML = `<div class="font-bold text-xs opacity-75 mb-1">${sender}</div>${message}`;
-            box.appendChild(msgDiv);
-            box.scrollTop = box.scrollHeight;
+        function appendMsg(sender, text) {
+            const b = document.getElementById("ai-chat-box");
+            b.innerHTML += `<div class="p-3 rounded-2xl max-w-lg text-sm border bg-slate-800 text-slate-200 border-slate-700"><div class="font-bold text-xs opacity-75 mb-1">${sender}</div>${text}</div>`;
+            b.scrollTop = b.scrollHeight;
         }
     </script>
 </body>
