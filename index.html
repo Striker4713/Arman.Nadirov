@@ -30,7 +30,7 @@
                 <div>
                     <h1 class="text-xl font-black tracking-tight text-white flex items-center gap-2">
                         FPL 26/27 Kz ANALYTICS 
-                        <span class="text-[10px] bg-white/10 text-white border border-white/20 px-2 py-0.5 rounded-full">v6.1</span>
+                        <span class="text-[10px] bg-white/10 text-white border border-white/20 px-2 py-0.5 rounded-full">v6.2 API LIVE</span>
                     </h1>
                 </div>
             </div>
@@ -140,10 +140,10 @@
             <div class="glass-panel rounded-2xl overflow-hidden">
                 <div class="p-4 border-b border-white/10 bg-black/20">
                     <h2 class="font-bold text-lg text-amber-400">Тепловая карта дифференциалов</h2>
-                    <p class="text-xs text-slate-400 mt-1">Уникальные активы менеджеров (игроки, которых нет у других в вашей мини-лиге).</p>
+                    <p class="text-xs text-slate-400 mt-1">Функция находится в разработке. Будет собирать уникальные активы из реального массива FPL.</p>
                 </div>
-                <div class="p-4" id="differentials-container">
-                    <!-- Заполняется через JS -->
+                <div class="p-4 text-center text-slate-400" id="differentials-container">
+                    Ожидание загрузки подробных пиков...
                 </div>
             </div>
         </section>
@@ -186,31 +186,93 @@
     </main>
 
     <script>
+        const LEAGUE_ID = "432533";
         let currentManagers = [];
         let currentGW = 1;
 
-        const SIMULATED_MANAGERS = [
-            { id: 1, name: "Migmar Rinchinov", pts: 65, gwPts: 65, grossGwPts: 65, team: "Liver in Heart", transfers: 0, hitCost: 0, bench: 4, capPts: 12 },
-            { id: 2, name: "Arman Nadirov", pts: 62, gwPts: 62, grossGwPts: 62, team: "FiXiC4713", transfers: 0, hitCost: 0, bench: 8, capPts: 10 },
-            { id: 3, name: "Fahriddin Umarov", pts: 58, gwPts: 58, grossGwPts: 58, team: "1st", transfers: 0, hitCost: 0, bench: 2, capPts: 14 }
-        ];
-
+        // Авто-синхронизация при загрузке
         window.onload = () => {
-            currentManagers = SIMULATED_MANAGERS;
-            renderAll();
+            fetchFPL(); 
         };
 
-        function fetchFPL() {
-            document.getElementById("sync-icon").classList.add("fa-spin");
-            document.getElementById("data-status-text").innerText = "Синхронизация...";
+        // Защищенная функция обхода блокировок FPL
+        async function fetchFPLData(endpoint) {
+            const url = `https://fantasy.premierleague.com/api/${endpoint}`;
             
-            setTimeout(() => {
-                currentManagers = SIMULATED_MANAGERS;
+            // 1. Пробуем через ваш Vercel Прокси (если он работает)
+            try {
+                let res = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
+                if (res.ok) return await res.json();
+            } catch (e) {}
+
+            // 2. Пробуем AllOrigins Proxy
+            try {
+                let res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+                if (res.ok) return await res.json();
+            } catch (e) {}
+
+            // 3. Прямой запрос (Сработает, если включен Allow CORS в браузере)
+            try {
+                let res = await fetch(url);
+                if (res.ok) return await res.json();
+            } catch (e) {}
+            
+            return null; // Если все 3 способа упали
+        }
+
+        async function fetchFPL() {
+            document.getElementById("sync-icon").classList.add("fa-spin");
+            document.getElementById("data-status-text").innerText = "Подключение к FPL...";
+            document.getElementById("data-status-badge").className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+            
+            // ЖЕСТКОЕ УДАЛЕНИЕ: Очищаем массив, чтобы 100% не было фейковых данных
+            currentManagers = [];
+
+            // Качаем таблицу Лиги
+            const leagueData = await fetchFPLData(`leagues-classic/${LEAGUE_ID}/standings/`);
+            
+            if (!leagueData || !leagueData.standings || !leagueData.standings.results) {
                 document.getElementById("sync-icon").classList.remove("fa-spin");
-                document.getElementById("data-status-badge").classList.add("bg-fpl-green", "text-[#37003c]");
-                document.getElementById("data-status-text").innerText = "🟢 LIVE: Данные загружены";
-                renderAll();
-            }, 1000);
+                document.getElementById("data-status-badge").className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                document.getElementById("data-status-text").innerText = "Ошибка FPL: Включите CORS";
+                return;
+            }
+
+            const results = leagueData.standings.results;
+            
+            // Качаем детали (скамейка, штрафы) для каждого реального участника
+            await Promise.all(results.map(async (r) => {
+                let manager = {
+                    id: r.entry,
+                    name: r.player_name,
+                    team: r.entry_name,
+                    pts: r.total,
+                    gwPts: r.event_total,
+                    grossGwPts: r.event_total, 
+                    transfers: 0,
+                    hitCost: 0,
+                    bench: 0,
+                    capPts: 0
+                };
+
+                const histData = await fetchFPLData(`entry/${r.entry}/history/`);
+                if (histData && histData.current && histData.current.length > 0) {
+                    const currEvent = histData.current[histData.current.length - 1];
+                    currentGW = currEvent.event;
+                    manager.hitCost = currEvent.event_transfers_cost || 0;
+                    manager.grossGwPts = manager.gwPts + manager.hitCost;
+                    manager.bench = currEvent.points_on_bench || 0;
+                    manager.transfers = currEvent.event_transfers || 0;
+                }
+
+                currentManagers.push(manager);
+            }));
+
+            document.getElementById("sync-icon").classList.remove("fa-spin");
+            document.getElementById("data-status-badge").className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-fpl-green text-[#37003c] border border-fpl-green";
+            document.getElementById("data-status-text").innerText = "🟢 LIVE: Данные загружены";
+            
+            renderAll();
         }
 
         function renderAll() {
@@ -221,7 +283,6 @@
             renderGapMatrix();
             renderAzamatCup();
             renderH2H();
-            renderDifferentials();
             renderNominations();
         }
 
@@ -305,35 +366,6 @@
             body.innerHTML = bodyHTML;
         }
 
-        function renderDifferentials() {
-            const container = document.getElementById("differentials-container");
-            container.innerHTML = "";
-            
-            // Демо-данные для визуализации (до появления реальных API запросов пиков)
-            const diffMocks = {
-                1: ["Eze (CRY)", "Mbeumo (BRE)"],
-                2: ["Mitoma (BHA)", "Awoniyi (NFO)"],
-                3: ["Gvardiol (MCI)", "Diaby (AVL)"]
-            };
-
-            currentManagers.forEach(m => {
-                const diffs = diffMocks[m.id] || ["Ищет свою игру..."];
-                let tags = diffs.map(d => `<span class="bg-fpl-green/20 text-fpl-green border border-fpl-green/30 px-3 py-1 rounded text-xs font-bold">${d}</span>`).join('');
-
-                container.innerHTML += `
-                    <div class="glass-panel p-4 rounded-xl flex items-center justify-between mb-3 border-l-4 border-l-amber-400 hover:bg-white/5 transition-all">
-                        <div>
-                            <div class="font-bold text-white text-sm">${m.name}</div>
-                            <div class="text-xs text-slate-400">${m.team}</div>
-                        </div>
-                        <div class="flex gap-2 flex-wrap justify-end">
-                            ${tags}
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
         function renderNominations() {
             const grid = document.getElementById("nominations-grid");
             grid.innerHTML = "";
@@ -350,7 +382,7 @@
                 { title: "💸 Трансферный Волк", desc: "Лучший PnL по трансферам", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
                 { title: "📊 Инвестор Года", desc: "Очки на миллион (ROI)", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
                 { title: "👑 Капитанская Альфа", desc: "Максимум от кэпов", val: `${[...currentManagers].sort((a,b)=>b.capPts-a.capPts)[0].capPts} pts`, winner: [...currentManagers].sort((a,b)=>b.capPts-a.capPts)[0].name },
-                { title: "🎢 Мастер Дисперсии", desc: "Самые нестабильные очки", val: isEarly ? "Пока пусто (нужно больше туров)" : "Считаем", winner: "-" },
+                { title: "🎢 Мастер Дисперсии", desc: "Самые нестабильные очки", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
                 { title: "🌧️ Главный Неудачник", desc: "Меньше всего очков относительно xP", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
                 { title: "🎯 Идеальная Фильтрация", desc: "Минимум очков на банке", val: `${[...currentManagers].sort((a,b)=>a.bench-b.bench)[0].bench} pts`, winner: [...currentManagers].sort((a,b)=>a.bench-b.bench)[0].name },
                 { title: "🪙 Герои Дешевых Слотов", desc: "Очки от игроков до £5.0M", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" }
