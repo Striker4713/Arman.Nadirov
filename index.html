@@ -422,18 +422,6 @@
         let chartPerGwObj = null;
         let chartRankObj = null;
 
-        // Fallback Seed Data in case FPL API is temporarily unreachable
-        const SEED_MANAGERS = [
-            { id: 101, name: "Arman Nadirov", team: "FiXiC4713", pts: 62, gwPts: 62, grossGwPts: 62, hitCost: 0, squadVal: 100.0, benchPts: 8, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 24, bestCap: "Salah", capHitPct: 100, minBench: 8, lowCostPts: 14, unluckyXP: 68, historyGWs: [62] },
-            { id: 102, name: "Fahriddin Umarov", team: "1st", pts: 58, gwPts: 58, grossGwPts: 62, hitCost: 4, squadVal: 100.0, benchPts: 4, transfers: 1, pnl: 4, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 20, bestCap: "Haaland", capHitPct: 100, minBench: 4, lowCostPts: 12, unluckyXP: 60, historyGWs: [58] },
-            { id: 103, name: "Almas Adilkhanov", team: "Ebebreezy Eazy", pts: 54, gwPts: 54, grossGwPts: 54, hitCost: 0, squadVal: 100.0, benchPts: 12, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 18, bestCap: "Saka", capHitPct: 100, minBench: 12, lowCostPts: 16, unluckyXP: 57, historyGWs: [54] },
-            { id: 104, name: "Migmar Rinchinov", team: "Liver in Heart", pts: 51, gwPts: 51, grossGwPts: 55, hitCost: 4, squadVal: 100.5, benchPts: 6, transfers: 1, pnl: 2, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 24, bestCap: "Haaland", capHitPct: 100, minBench: 6, lowCostPts: 10, unluckyXP: 55, historyGWs: [51] },
-            { id: 105, name: "Kuanysh Duisebekov", team: "322", pts: 49, gwPts: 49, grossGwPts: 49, hitCost: 0, squadVal: 100.0, benchPts: 15, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 16, bestCap: "Palmer", capHitPct: 100, minBench: 15, lowCostPts: 8, unluckyXP: 52, historyGWs: [49] },
-            { id: 106, name: "Timur Kabdullin", team: "kabanchiki", pts: 46, gwPts: 46, grossGwPts: 50, hitCost: 4, squadVal: 100.0, benchPts: 3, transfers: 1, pnl: -2, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 12, bestCap: "Isak", capHitPct: 0, minBench: 3, lowCostPts: 14, unluckyXP: 49, historyGWs: [46] },
-            { id: 107, name: "Sabyrzhan Bazylbek", team: "BST Club", pts: 42, gwPts: 42, grossGwPts: 42, hitCost: 0, squadVal: 99.5, benchPts: 9, transfers: 0, pnl: 0, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 14, bestCap: "Son", capHitPct: 0, minBench: 9, lowCostPts: 11, unluckyXP: 45, historyGWs: [42] },
-            { id: 108, name: "Didar Kassymkhanov", team: "kWT", pts: 38, gwPts: 38, grossGwPts: 46, hitCost: 8, squadVal: 99.5, benchPts: 18, transfers: 2, pnl: -6, chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" }, capPts: 10, bestCap: "Watkins", capHitPct: 0, minBench: 18, lowCostPts: 6, unluckyXP: 44, historyGWs: [38] }
-        ];
-
         window.onload = function() {
             // Automatically trigger full data sync on window load
             syncFPLData();
@@ -442,11 +430,30 @@
         // Multi-proxy fetch pipeline to seamlessly bypass CORS and Cloudflare
         async function fetchFPL(endpoint) {
             const targetUrl = `https://fantasy.premierleague.com/api/${endpoint}`;
+            
+            // 1. Собственный туннель Vercel (Идеальное решение, работает как часы)
+            try {
+                const vercelRes = await fetch(`/api/fpl/${endpoint}`);
+                if (vercelRes.ok) {
+                    const text = await vercelRes.text();
+                    // Защита: если вернулся не HTML-код ошибки, значит это чистый JSON от FPL
+                    if (!text.trim().startsWith("<")) return JSON.parse(text);
+                }
+            } catch(e) {
+                console.log("Vercel Proxy error:", e.message);
+            }
+
+            // 2. Прямой запрос (на случай, если тестируете локально с расширением)
+            try {
+                const directRes = await fetch(targetUrl);
+                if (directRes.ok) return await directRes.json();
+            } catch(e) {}
+
+            // 3. Запасные публичные прокси (на крайний случай)
             const proxies = [
                 (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
                 (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-                (url) => `https://cors-proxy.htmldev.workers.dev/?u=${encodeURIComponent(url)}`
+                (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
             ];
 
             for (const proxyFn of proxies) {
@@ -456,13 +463,12 @@
                     if (!res.ok) continue;
                     const text = await res.text();
                     if (!text || text.trim().startsWith("<")) continue;
-                    const json = JSON.parse(text);
-                    if (json) return json;
+                    return JSON.parse(text);
                 } catch (e) {
-                    console.log("Proxy attempt note for", endpoint, ":", e.message);
+                    console.log("Proxy failed:", e.message);
                 }
             }
-            throw new Error(`Endpoint ${endpoint} unavailable`);
+            throw new Error(`Cloudflare заблокировал все запросы к ${endpoint}`);
         }
 
         // Fetch deep manager details (history, chips, bench, captain, transfers)
@@ -542,7 +548,7 @@
                             if (livePts !== undefined) {
                                 m.capPts = livePts * multiplier;
                             } else {
-                                m.capPts = Math.floor(m.gwPts * 0.35);
+                                m.capPts = 0; // Строго реальные данные, никаких выдуманных очков
                             }
                         }
                     }
@@ -562,6 +568,8 @@
             statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30";
             statusDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
             statusText.innerText = "⚡ Загрузка FPL API (#432533)...";
+
+            hideErrorMessage();
 
             try {
                 // Fetch standings
@@ -583,12 +591,12 @@
                         transfers: 0,
                         pnl: 0,
                         chips: { wc1: "-", wc2: "-", fh: "-", tc: "-", bb: "-" },
-                        capPts: Math.floor(r.event_total * 0.35),
-                        bestCap: "Капитан",
-                        capHitPct: r.total > 50 ? 80 : 50,
+                        capPts: 0,
+                        bestCap: "Поиск...",
+                        capHitPct: 0,
                         minBench: 0,
-                        lowCostPts: Math.floor(r.total * 0.2),
-                        unluckyXP: r.total + 5,
+                        lowCostPts: 0,
+                        unluckyXP: 0,
                         historyGWs: [r.event_total]
                     }));
 
@@ -602,28 +610,95 @@
 
                     // Deep details fetch in background
                     await fetchDetailsForManagers();
+                    
+                    // Обновляем таблицы после получения глубинных данных
+                    calculateAzamatCup();
+                    renderAllTabs();
+                    
                     statusText.innerText = `🟢 LIVE: FPL API (100% Данные Загружены)`;
                 } else {
                     throw new Error("Invalid FPL standings structure");
                 }
             } catch (err) {
-                console.log("FPL Sync Note:", err.message, "-> Fallback to Seed Data");
-                currentManagers = SEED_MANAGERS;
+                console.log("FPL Sync Error:", err.message);
+                currentManagers = []; // Очищаем массив, блокируем фейк данные
                 isLiveData = false;
 
-                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/30";
-                statusDot.className = "w-2 h-2 rounded-full bg-blue-400";
-                statusText.innerText = "⚡ Автономный режим FPL (GW1)";
+                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30";
+                statusDot.className = "w-2 h-2 rounded-full bg-rose-400";
+                statusText.innerText = "❌ Ошибка: API заблокирован";
+                
+                showErrorMessage();
+                clearAllTabs();
             } finally {
                 syncIcon.classList.remove("fa-spin");
-                calculateAzamatCup();
-                renderAllTabs();
+            }
+        }
+
+        function showErrorMessage() {
+            const container = document.getElementById("tab-standings");
+            const existingError = document.getElementById("fpl-error-msg");
+            if (!existingError) {
+                const errorDiv = document.createElement("div");
+                errorDiv.id = "fpl-error-msg";
+                errorDiv.className = "glass-panel p-6 rounded-2xl border-l-4 border-l-rose-500 mb-6 bg-rose-950/20";
+                errorDiv.innerHTML = `
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Данные не загружены
+                    </h3>
+                    <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+                        Официальный сервер FPL отклонил автоматический запрос с сайта (сработала защита от ботов Cloudflare).<br>
+                        <strong>Как это починить:</strong> Установите браузерное расширение для обхода CORS (рекомендуем <a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" target="_blank" class="text-blue-400 font-bold underline">Allow CORS для Chrome</a>). Включите его (сделайте иконку цветной) и обновите эту страницу. Сайт скачает 100% реальные данные напрямую!
+                    </p>
+                `;
+                container.prepend(errorDiv);
+            }
+        }
+
+        function hideErrorMessage() {
+            const existingError = document.getElementById("fpl-error-msg");
+            if (existingError) existingError.remove();
+        }
+
+        function clearAllTabs() {
+            document.getElementById("standings-tbody").innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 font-semibold bg-slate-900/30">Данные отсутствуют. Ознакомьтесь с ошибкой выше.</td></tr>';
+            
+            document.getElementById("stat-leader-name").innerText = "—";
+            document.getElementById("stat-leader-pts").innerText = "0 pts";
+            const azamatLeader = document.getElementById("stat-azamat-leader");
+            if (azamatLeader) azamatLeader.innerText = "—";
+            const azamatPts = document.getElementById("stat-azamat-pts");
+            if (azamatPts) azamatPts.innerText = "0 pts";
+            document.getElementById("stat-avg-score").innerText = "0 pts";
+            document.getElementById("stat-top3-gap").innerText = "0 pts";
+            
+            const pTbody = document.getElementById("azamat-preview-tbody");
+            if(pTbody) pTbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 font-semibold bg-slate-900/30">Данные отсутствуют</td></tr>';
+            
+            const fTbody = document.getElementById("azamat-full-tbody");
+            if(fTbody) fTbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 font-semibold bg-slate-900/30">Данные отсутствуют</td></tr>';
+            
+            ["transfers-tbody", "chips-tbody", "captains-tbody"].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 font-semibold bg-slate-900/30">Данные отсутствуют</td></tr>';
+            });
+
+            const grid = document.getElementById("nominations-grid");
+            if(grid) grid.innerHTML = '<div class="col-span-1 md:col-span-3 p-8 text-center text-slate-400 font-semibold bg-slate-900/30 rounded-xl border border-slate-800">Номинации будут рассчитаны после загрузки реальных данных</div>';
+            
+            const reviewContainer = document.getElementById("review-cards-container");
+            if(reviewContainer) reviewContainer.innerHTML = '<div class="p-8 text-center text-slate-400 font-semibold bg-slate-900/30 rounded-xl border border-slate-800">Разбор будет доступен после синхронизации</div>';
+
+            const chartsContainer = document.getElementById("tab-charts");
+            if(chartsContainer) {
+                 if (chartCumulativeObj) { chartCumulativeObj.destroy(); chartCumulativeObj = null; }
+                 if (chartPerGwObj) { chartPerGwObj.destroy(); chartPerGwObj = null; }
+                 if (chartRankObj) { chartRankObj.destroy(); chartRankObj = null; }
             }
         }
 
         function calculateAzamatCup() {
-            // Rule: Rank managers by Gross GW Points (grossGwPts = net_pts + hit_cost).
-            // N managers total. Top = 10 pts down to 1 pt.
+            if (currentManagers.length === 0) return;
             const sortedByGross = [...currentManagers].sort((a, b) => b.grossGwPts - a.grossGwPts);
 
             azamatStandings = sortedByGross.map((m, idx) => {
@@ -641,6 +716,7 @@
         }
 
         function renderAllTabs() {
+            if (currentManagers.length === 0) return;
             renderStandings();
             renderAzamatCup();
             renderCharts();
@@ -956,11 +1032,21 @@
 
         function sendQuickPrompt(type) {
             const box = document.getElementById("ai-chat-box");
+            if (!box) return;
+
             let userMsg = "";
             let botReply = "";
 
-            const topManager = currentManagers[0] || SEED_MANAGERS[0];
-            const bottomManager = currentManagers[currentManagers.length - 1] || SEED_MANAGERS[SEED_MANAGERS.length - 1];
+            if (currentManagers.length === 0) {
+                appendChatMessage("Вы", "Сделай разбор!", "bg-blue-600/30 text-blue-200 ml-auto border-blue-500/30");
+                setTimeout(() => {
+                    appendChatMessage("🤖 AI Босс", "Брат, я бы размотал кого-нибудь, но данных нет. Подключись к FPL API!", "bg-slate-800 text-slate-200 border-slate-700");
+                }, 400);
+                return;
+            }
+
+            const topManager = currentManagers[0];
+            const bottomManager = currentManagers[currentManagers.length - 1];
             const topAzamat = azamatStandings[0] || topManager;
 
             if (type === 'roast_bottom') {
