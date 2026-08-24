@@ -3,42 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPL 26/27 Kz ANALYTICS</title>
+    <title>FPL 26/27 Kz Analytics v2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #37003c; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
-        .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .tab-btn.active { background-color: #00ff85; color: #37003c; border-color: #00ff85; font-weight: 700; }
-        .text-fpl-green { color: #00ff85; }
-        .text-fpl-cyan { color: #00ffff; }
-        .bg-fpl-green { background-color: #00ff85; color: #37003c; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #37003c; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #00ff85; border-radius: 4px; }
+        :root {
+            --fpl-purple: #37003c;
+            --fpl-purple-dark: #240027;
+            --fpl-green: #00ff85;
+            --fpl-cyan: #00d9ff;
+            --surface: rgba(255, 255, 255, 0.06);
+            --surface-hover: rgba(255, 255, 255, 0.10);
+            --border: rgba(255, 255, 255, 0.10);
+        }
+        body { background-color: var(--fpl-purple); color: #f8fafc; font-family: 'Montserrat', sans-serif; }
+        .glass-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+        .glass-panel:hover { background: var(--surface-hover); }
+        .tab-btn.active { background-color: var(--fpl-green); color: var(--fpl-purple-dark); font-weight: 800; border: none; }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: var(--fpl-purple-dark); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--fpl-green); border-radius: 4px; }
+        .chart-container { position: relative; height: 320px; width: 100%; }
+        @media (max-width: 768px) { .chart-container { height: 260px; } }
+        [role="tabpanel"].hidden { display: none; }
     </style>
 </head>
 <body class="min-h-screen pb-12">
 
     <!-- Header -->
-    <header class="glass-panel sticky top-0 z-50 border-b border-white/10 px-4 py-3">
+    <header class="glass-panel sticky top-0 z-50 rounded-none border-t-0 border-l-0 border-r-0 px-4 py-3 bg-[#37003c]/90 backdrop-blur-md">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-fpl-green flex items-center justify-center text-xl font-bold">⚽</div>
+                <div class="w-10 h-10 rounded-xl bg-[#00ff85] flex items-center justify-center text-xl font-bold text-[#37003c]">⚽</div>
                 <div>
                     <h1 class="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                        FPL 26/27 Kz ANALYTICS 
-                        <span class="text-[10px] bg-white/10 text-white border border-white/20 px-2 py-0.5 rounded-full">v6.2 API LIVE</span>
+                        FPL Kz Analytics <span class="text-[10px] bg-white/10 border border-white/20 px-2 py-0.5 rounded-full">v2.0</span>
                     </h1>
+                    <p class="text-xs text-slate-400" id="gw-indicator">GW: Загрузка...</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
                 <div id="data-status-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 text-white border border-white/20">
-                    <span id="data-status-text">Ожидание данных...</span>
+                    <span id="data-status-text">Ожидание действий</span>
                 </div>
-                <button onclick="fetchFPL()" class="bg-fpl-green hover:opacity-80 text-[#37003c] text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
+                <button id="btn-sync" class="bg-[#00ff85] hover:opacity-80 text-[#37003c] text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2">
                     <i class="fa-solid fa-rotate" id="sync-icon"></i> Обновить FPL
                 </button>
             </div>
@@ -46,49 +56,58 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 mt-6">
-        <!-- Tabs -->
-        <nav class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar mb-6">
-            <button onclick="switchTab('tab-standings')" class="tab-btn active px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-trophy"></i> Главный дашборд</button>
-            <button onclick="switchTab('tab-azamat')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-crown text-fpl-cyan"></i> Кубок Азамата</button>
-            <button onclick="switchTab('tab-h2h')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-people-arrows text-rose-400"></i> H2H Матрица</button>
-            <button onclick="switchTab('tab-differentials')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-fire text-amber-400"></i> Дифференциалы</button>
-            <button onclick="switchTab('tab-charts')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-chart-line"></i> Графики</button>
-            <button onclick="switchTab('tab-transfers')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-right-left"></i> Трансферы</button>
-            <button onclick="switchTab('tab-chips')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-bolt"></i> Чипы</button>
-            <button onclick="switchTab('tab-captains')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-c"></i> Капитаны</button>
-            <button onclick="switchTab('tab-halloffame')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-award"></i> Доска Почета</button>
-            <button onclick="switchTab('tab-ai')" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-transparent text-slate-300 hover:text-white transition-all whitespace-nowrap"><i class="fa-solid fa-robot"></i> AI Аналитик</button>
+        
+        <!-- Оповещения об ошибках -->
+        <div id="error-container" class="hidden mb-6 bg-rose-500/20 border border-rose-500/50 p-4 rounded-xl text-rose-200 text-sm flex justify-between items-center">
+            <span id="error-message">⚠ Ошибка загрузки.</span>
+            <button id="btn-retry" class="bg-rose-500/40 px-3 py-1 rounded text-white font-bold">Повторить</button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar mb-6" role="tablist">
+            <button data-tab="tab-standings" class="tab-btn active px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="true"><i class="fa-solid fa-trophy mr-1"></i> Главный дашборд</button>
+            <button data-tab="tab-azamat" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="false"><i class="fa-solid fa-crown text-[#00d9ff] mr-1"></i> Кубок Азамата</button>
+            <button data-tab="tab-differentials" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="false"><i class="fa-solid fa-fire text-amber-400 mr-1"></i> Дифференциалы</button>
+            <button data-tab="tab-charts" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="false"><i class="fa-solid fa-chart-line mr-1"></i> Графики</button>
+            <button data-tab="tab-transfers" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="false"><i class="fa-solid fa-right-left mr-1"></i> Трансферы</button>
+            <button data-tab="tab-chips" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="false"><i class="fa-solid fa-bolt mr-1"></i> Чипы</button>
+            <button data-tab="tab-captains" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="false"><i class="fa-solid fa-c mr-1"></i> Капитаны</button>
+            <button data-tab="tab-halloffame" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="false"><i class="fa-solid fa-award mr-1"></i> Доска Почета</button>
+            <button data-tab="tab-ai" class="tab-btn px-4 py-2.5 rounded-xl text-sm border border-white/10 text-slate-300 hover:text-white transition-all whitespace-nowrap" role="tab" aria-selected="false"><i class="fa-solid fa-robot mr-1"></i> AI Аналитик</button>
         </nav>
 
-        <!-- TAB 1: Standings -->
-        <section id="tab-standings" class="tab-content space-y-6">
-            <div class="glass-panel rounded-2xl overflow-hidden">
-                <div class="p-4 border-b border-white/10 flex justify-between items-center bg-black/20">
-                    <h2 class="font-bold text-lg text-white">Официальная таблица Лиги</h2>
-                </div>
+        <!-- TAB 1: Главный дашборд -->
+        <section id="tab-standings" role="tabpanel" class="space-y-6">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="kpi-container">
+                <!-- Рендерится через JS -->
+            </div>
+
+            <div class="glass-panel overflow-hidden">
+                <div class="p-4 border-b border-white/10 bg-black/20"><h2 class="font-bold text-lg">Официальная таблица Лиги</h2></div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left text-sm border-collapse">
                         <thead>
-                            <tr class="bg-black/40 text-xs uppercase text-slate-300 border-b border-white/10">
+                            <tr class="bg-black/40 text-xs uppercase text-slate-400 border-b border-white/10">
                                 <th class="p-3 pl-4">#</th>
                                 <th class="p-3">Менеджер</th>
                                 <th class="p-3 text-center">GW Pts</th>
-                                <th class="p-3 text-center">Всего очков</th>
+                                <th class="p-3 text-center">Total</th>
+                                <th class="p-3 text-center">Δ Rank</th>
+                                <th class="p-3 text-center">Gap</th>
                             </tr>
                         </thead>
-                        <tbody id="standings-tbody" class="divide-y divide-white/5 text-sm"></tbody>
+                        <tbody id="standings-tbody" class="divide-y divide-white/5"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Матрица Отрыва -->
-            <div class="glass-panel rounded-2xl overflow-hidden mt-6">
+            <div class="glass-panel overflow-hidden mt-6">
                 <div class="p-4 border-b border-white/10 bg-black/20">
-                    <h2 class="font-bold text-lg text-white">Матрица Отрывов</h2>
-                    <p class="text-xs text-slate-400">Кто на сколько очков отстает от соперников выше</p>
+                    <h2 class="font-bold text-lg">Матрица Отрывов</h2>
                 </div>
                 <div class="overflow-x-auto p-4">
-                    <table class="w-full text-center border-collapse text-xs">
+                    <table class="w-full text-center text-xs border-collapse">
                         <thead id="gap-matrix-head"></thead>
                         <tbody id="gap-matrix-body"></tbody>
                     </table>
@@ -96,350 +115,723 @@
             </div>
         </section>
 
-        <!-- TAB 2: Azamat Cup -->
-        <section id="tab-azamat" class="tab-content hidden space-y-6">
-            <div class="glass-panel rounded-2xl overflow-hidden">
-                <div class="p-4 border-b border-white/10 bg-black/20">
-                    <h2 class="font-bold text-lg text-fpl-cyan">Кубок Азамата</h2>
-                    <p class="text-xs text-slate-400">Баллы от 10 до 1 за чистые очки тура (без вычета штрафов)</p>
+        <!-- TAB 2: Кубок Азамата -->
+        <section id="tab-azamat" role="tabpanel" class="hidden space-y-6">
+            <div class="glass-panel p-6">
+                <h2 class="font-bold text-lg text-[#00d9ff] mb-4">Накопленный прогресс Кубка Азамата</h2>
+                <div class="chart-container"><canvas id="azamatChart"></canvas></div>
+            </div>
+            <div class="glass-panel overflow-hidden">
+                <div class="p-4 border-b border-white/10 bg-black/20 flex justify-between items-center">
+                    <h2 class="font-bold text-lg text-[#00d9ff]">Турнирная таблица Кубка</h2>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left text-sm border-collapse">
                         <thead>
-                            <tr class="bg-black/40 text-xs uppercase text-slate-300 border-b border-white/10">
+                            <tr class="bg-black/40 text-xs uppercase text-slate-400 border-b border-white/10">
                                 <th class="p-3 pl-4">Место</th>
                                 <th class="p-3">Менеджер</th>
-                                <th class="p-3 text-center">Чистые Очки GW</th>
-                                <th class="p-3 text-center font-bold text-fpl-cyan">Баллы в Кубок</th>
+                                <th class="p-3 text-center">GW Очки (Чистые)</th>
+                                <th class="p-3 text-center">Очки в Кубок</th>
+                                <th class="p-3 text-center font-bold text-[#00d9ff]">Всего Кубок</th>
                             </tr>
                         </thead>
-                        <tbody id="azamat-tbody" class="divide-y divide-white/5 text-sm"></tbody>
+                        <tbody id="azamat-tbody" class="divide-y divide-white/5"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 3: H2H Matrix -->
-        <section id="tab-h2h" class="tab-content hidden space-y-6">
-            <div class="glass-panel rounded-2xl overflow-hidden">
-                <div class="p-4 border-b border-white/10 bg-black/20 flex flex-col">
-                    <h2 class="font-bold text-lg text-rose-400">Матрица Head-to-Head (H2H)</h2>
-                    <p class="text-xs text-slate-400 mt-1">Кто кого победил бы в текущем туре при прямом столкновении. Сравниваются заработанные GW очки.</p>
+        <!-- TAB 3: Дифференциалы -->
+        <section id="tab-differentials" role="tabpanel" class="hidden space-y-6">
+            <div class="glass-panel p-6">
+                <h2 class="font-bold text-lg text-amber-400 mb-2">Тепловая карта дифференциалов</h2>
+                <p class="text-xs text-slate-400 mb-4">Матрица владения игроками внутри лиги. Данные строятся на основе актуальных пиков текущего тура.</p>
+                <div class="overflow-x-auto" id="differentials-container"></div>
+            </div>
+        </section>
+
+        <!-- TAB 4: Графики -->
+        <section id="tab-charts" role="tabpanel" class="hidden space-y-6">
+            <div class="glass-panel p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold text-lg">Общие очки по турам</h2>
+                    <select id="chart-manager-select" class="bg-black/40 border border-white/10 rounded px-2 py-1 text-sm outline-none">
+                        <option value="all">Все менеджеры</option>
+                    </select>
                 </div>
-                <div class="overflow-x-auto p-4">
-                    <table class="w-full text-center border-collapse text-sm">
-                        <thead id="h2h-matrix-head"></thead>
-                        <tbody id="h2h-matrix-body" class="divide-y divide-white/5"></tbody>
+                <div class="chart-container"><canvas id="pointsChart"></canvas></div>
+            </div>
+            <div class="glass-panel p-6">
+                <h2 class="font-bold text-lg mb-4">Динамика позиции в лиге</h2>
+                <div class="chart-container"><canvas id="rankChart"></canvas></div>
+            </div>
+        </section>
+
+        <!-- TAB 5: Трансферы -->
+        <section id="tab-transfers" role="tabpanel" class="hidden space-y-6">
+            <div class="glass-panel overflow-hidden">
+                <div class="p-4 border-b border-white/10 bg-black/20"><h2 class="font-bold text-lg">Журнал трансферов (Сезон)</h2></div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-black/40 text-xs uppercase text-slate-400 border-b border-white/10">
+                                <th class="p-3 pl-4">Менеджер</th>
+                                <th class="p-3 text-center">Сделано замен</th>
+                                <th class="p-3 text-center">Штрафы (Hits)</th>
+                                <th class="p-3 text-center">Transfer ROI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transfers-tbody" class="divide-y divide-white/5"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 4: Differentials -->
-        <section id="tab-differentials" class="tab-content hidden space-y-6">
-            <div class="glass-panel rounded-2xl overflow-hidden">
-                <div class="p-4 border-b border-white/10 bg-black/20">
-                    <h2 class="font-bold text-lg text-amber-400">Тепловая карта дифференциалов</h2>
-                    <p class="text-xs text-slate-400 mt-1">Функция находится в разработке. Будет собирать уникальные активы из реального массива FPL.</p>
-                </div>
-                <div class="p-4 text-center text-slate-400" id="differentials-container">
-                    Ожидание загрузки подробных пиков...
+        <!-- TAB 6: Чипы -->
+        <section id="tab-chips" role="tabpanel" class="hidden space-y-6">
+             <div class="glass-panel overflow-hidden">
+                <div class="p-4 border-b border-white/10 bg-black/20"><h2 class="font-bold text-lg">Матрица использования чипов</h2></div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center text-sm border-collapse">
+                        <thead id="chips-head"></thead>
+                        <tbody id="chips-tbody" class="divide-y divide-white/5"></tbody>
+                    </table>
                 </div>
             </div>
         </section>
 
-        <!-- Placeholder Tabs for Charts, Transfers, Chips, Captains -->
-        <section id="tab-charts" class="tab-content hidden"><div class="glass-panel p-6 rounded-2xl text-center text-slate-400">Графики будут доступны после 2-го тура.</div></section>
-        <section id="tab-transfers" class="tab-content hidden"><div class="glass-panel p-6 rounded-2xl text-center text-slate-400">Данные по трансферам обновятся после старта тура.</div></section>
-        <section id="tab-chips" class="tab-content hidden"><div class="glass-panel p-6 rounded-2xl text-center text-slate-400">Матрица чипов (Формат: Тур / Очки) формируется...</div></section>
-        <section id="tab-captains" class="tab-content hidden"><div class="glass-panel p-6 rounded-2xl text-center text-slate-400">Статистика капитанов появится после завершения матчей тура.</div></section>
-
-        <!-- TAB: Hall of Fame (12 Номинаций) -->
-        <section id="tab-halloffame" class="tab-content hidden space-y-6">
-            <div class="p-2">
-                <h2 class="text-2xl font-black text-white">Доска Почета и Позора</h2>
-                <p class="text-xs text-slate-400">Все 12 номинаций. Некоторые откроются позже по ходу сезона.</p>
-            </div>
-            <div id="nominations-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Генерируется через JS -->
+        <!-- TAB 7: Капитаны -->
+        <section id="tab-captains" role="tabpanel" class="hidden space-y-6">
+            <div class="glass-panel overflow-hidden">
+                <div class="p-4 border-b border-white/10 bg-black/20"><h2 class="font-bold text-lg">Статистика Капитанов (Current GW)</h2></div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-black/40 text-xs uppercase text-slate-400 border-b border-white/10">
+                                <th class="p-3 pl-4">Менеджер</th>
+                                <th class="p-3 text-center">Капитан</th>
+                                <th class="p-3 text-center">Вице-капитан</th>
+                                <th class="p-3 text-center">Multiplier</th>
+                            </tr>
+                        </thead>
+                        <tbody id="captains-tbody" class="divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- TAB: AI Analyst -->
-        <section id="tab-ai" class="tab-content hidden space-y-6">
-            <div class="glass-panel p-6 rounded-2xl">
+        <!-- TAB 8: Доска Почета -->
+        <section id="tab-halloffame" role="tabpanel" class="hidden space-y-6">
+            <div class="p-2"><h2 class="text-2xl font-black text-white">Доска Почета и Позора</h2></div>
+            <div id="nominations-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+
+        <!-- TAB 9: AI Аналитик -->
+        <section id="tab-ai" role="tabpanel" class="hidden space-y-6">
+            <div class="glass-panel p-6">
                 <h3 class="text-xl font-bold text-white mb-4">Уличный AI Аналитик</h3>
                 <div class="flex gap-2 mb-4">
-                    <button onclick="aiPrompt('roast')" class="bg-black/30 border border-white/10 text-white text-xs px-3 py-2 rounded-xl">Прожарить последнего</button>
-                    <button onclick="aiPrompt('praise')" class="bg-black/30 border border-white/10 text-fpl-green text-xs px-3 py-2 rounded-xl">Респект лидеру</button>
+                    <button id="btn-ai-roast" class="bg-black/30 border border-white/10 text-white text-xs px-3 py-2 rounded-xl transition-colors hover:bg-white/10">Прожарить последнего</button>
+                    <button id="btn-ai-praise" class="bg-black/30 border border-white/10 text-[#00ff85] text-xs px-3 py-2 rounded-xl transition-colors hover:bg-white/10">Респект лидеру</button>
                 </div>
                 <div id="ai-chat" class="h-64 overflow-y-auto bg-black/40 rounded-xl p-4 space-y-3 mb-4 custom-scrollbar">
-                    <div class="text-slate-300 text-sm bg-white/10 p-3 rounded-xl border border-white/10 inline-block">Йоу! Загрузи данные, и я размотаю по фактам любого.</div>
+                    <div class="text-slate-300 text-sm bg-white/10 p-3 rounded-xl border border-white/10 inline-block">Салам! Данные на базе, готов разваливать по фактам. Пиши запрос.</div>
                 </div>
                 <div class="flex gap-2">
-                    <input type="text" id="ai-input" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-4 text-sm text-white" placeholder="Спроси бота...">
-                    <button onclick="aiCustom()" class="bg-fpl-cyan text-[#37003c] font-bold px-4 py-2 rounded-xl">Отправить</button>
+                    <input type="text" id="ai-input" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-4 text-sm text-white" placeholder="Например: Кто главный конкурент?">
+                    <button id="btn-ai-send" class="bg-[#00d9ff] text-[#37003c] font-bold px-4 py-2 rounded-xl hover:opacity-80">Отправить</button>
                 </div>
             </div>
         </section>
-
     </main>
 
     <script>
-        const LEAGUE_ID = "432533";
-        let currentManagers = [];
-        let currentGW = 1;
+        /**
+         * FPL Kz Analytics v2.0 - Core Engine
+         * Архитектура без мок-данных, полностью основанная на localStorage и fetch API
+         */
 
-        // Авто-синхронизация при загрузке
-        window.onload = () => {
-            fetchFPL(); 
+        // 1. STATE MANAGEMENT
+        const LEAGUE_ID = "432533";
+        const STORAGE_KEY = "fpl_kz_analytics_v2";
+
+        const appState = {
+            currentGW: 1,
+            managers: [], 
+            gameweeks: [], // Хранит исторические маппинги Кубка Азамата
+            activeTab: 'tab-standings',
+            charts: {},
+            dataLoaded: false
         };
 
-        // Защищенная функция обхода блокировок FPL
-        async function fetchFPLData(endpoint) {
-            const url = `https://fantasy.premierleague.com/api/${endpoint}`;
-            
-            // 1. Пробуем через ваш Vercel Прокси (если он работает)
-            try {
-                let res = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
-                if (res.ok) return await res.json();
-            } catch (e) {}
+        // Базовая структура менеджера для инициализации
+        const createManagerTemplate = (id, name, team) => ({
+            id, name, team,
+            totalPoints: 0, gwPoints: 0,
+            transfersIn: 0, transfersOut: 0, transferCount: 0, hitCost: 0,
+            benchPoints: 0,
+            captain: 'N/A', viceCaptain: 'N/A', multiplier: 1,
+            chips: [],
+            history: [], // [{ gw, points, rank, cupPoints, rawGwPts }]
+            picks: [] // Текущие пики для дифференциалов
+        });
 
-            // 2. Пробуем AllOrigins Proxy
-            try {
-                let res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-                if (res.ok) return await res.json();
-            } catch (e) {}
-
-            // 3. Прямой запрос (Сработает, если включен Allow CORS в браузере)
-            try {
-                let res = await fetch(url);
-                if (res.ok) return await res.json();
-            } catch (e) {}
+        // 2. INITIALIZATION
+        document.addEventListener('DOMContentLoaded', () => {
+            initTabs();
+            initAI();
+            bindEvents();
             
-            return null; // Если все 3 способа упали
+            // Восстановление состояния
+            const savedState = localStorage.getItem(STORAGE_KEY);
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    Object.assign(appState, parsed);
+                    if (appState.managers.length > 0) {
+                        appState.dataLoaded = true;
+                        document.getElementById('gw-indicator').textContent = `GW: ${appState.currentGW}`;
+                        uiSetStatus('🟢 Cache Loaded', 'text-emerald-400');
+                        renderAll();
+                    }
+                } catch(e) { console.error("Cache error", e); }
+            }
+
+            // Авто-загрузка свежих данных
+            loadData();
+        });
+
+        // Подвязка событий
+        function bindEvents() {
+            document.getElementById('btn-sync').addEventListener('click', loadData);
+            document.getElementById('btn-retry').addEventListener('click', loadData);
+            document.getElementById('chart-manager-select').addEventListener('change', (e) => {
+                renderCharts(e.target.value);
+            });
+            window.addEventListener('error', (e) => uiShowError(e.message));
         }
 
-        async function fetchFPL() {
-            document.getElementById("sync-icon").classList.add("fa-spin");
-            document.getElementById("data-status-text").innerText = "Подключение к FPL...";
-            document.getElementById("data-status-badge").className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30";
-            
-            // ЖЕСТКОЕ УДАЛЕНИЕ: Очищаем массив, чтобы 100% не было фейковых данных
-            currentManagers = [];
+        function escapeHTML(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
 
-            // Качаем таблицу Лиги
-            const leagueData = await fetchFPLData(`leagues-classic/${LEAGUE_ID}/standings/`);
+        // 3. UI HELPER FUNCTIONS
+        function uiSetStatus(text, colorClass) {
+            const badge = document.getElementById('data-status-badge');
+            const statusText = document.getElementById('data-status-text');
+            badge.className = `flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-white/20 ${colorClass}`;
+            statusText.textContent = text;
+        }
+
+        function uiShowError(msg) {
+            document.getElementById('error-container').classList.remove('hidden');
+            document.getElementById('error-message').textContent = `⚠ ${msg}`;
+            document.getElementById('sync-icon').classList.remove('fa-spin');
+        }
+
+        function hideError() {
+            document.getElementById('error-container').classList.add('hidden');
+        }
+
+        // Управление вкладками без inline JS
+        function initTabs() {
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const targetId = e.currentTarget.getAttribute('data-tab');
+                    
+                    // Сброс активностей
+                    document.querySelectorAll('.tab-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-selected', 'false');
+                    });
+                    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.classList.add('hidden'));
+                    
+                    // Активация
+                    e.currentTarget.classList.add('active');
+                    e.currentTarget.setAttribute('aria-selected', 'true');
+                    document.getElementById(targetId).classList.remove('hidden');
+                    
+                    appState.activeTab = targetId;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+                });
+            });
+
+            // Восстановление активного таба
+            if (appState.activeTab) {
+                const targetBtn = document.querySelector(`.tab-btn[data-tab="${appState.activeTab}"]`);
+                if (targetBtn) targetBtn.click();
+            }
+        }
+
+        // Управление графиками Chart.js
+        function createChart(canvasId, type, data, options) {
+            if (appState.charts[canvasId]) appState.charts[canvasId].destroy();
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            appState.charts[canvasId] = new Chart(ctx, { type, data, options });
+        }
+
+        // 4. DATA FETCHING (Реальный FPL API)
+        async function fetchFPLAPI(endpoint) {
+            const targetUrl = `https://fantasy.premierleague.com/api/${endpoint}`;
+            // Proxy fallback цепочка для обхода CORS
+            const proxies = [
+                `/api/proxy?url=${encodeURIComponent(targetUrl)}`, 
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+            ];
             
-            if (!leagueData || !leagueData.standings || !leagueData.standings.results) {
-                document.getElementById("sync-icon").classList.remove("fa-spin");
-                document.getElementById("data-status-badge").className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30";
-                document.getElementById("data-status-text").innerText = "Ошибка FPL: Включите CORS";
+            for (let url of proxies) {
+                try {
+                    const res = await fetch(url);
+                    if (res.ok) return await res.json();
+                } catch(e) { continue; }
+            }
+            throw new Error(`Блокировка API. Прокси недоступны. ${endpoint}`);
+        }
+
+        async function loadData() {
+            const syncIcon = document.getElementById('sync-icon');
+            syncIcon.classList.add('fa-spin');
+            uiSetStatus('⟳ Синхронизация...', 'text-amber-400');
+            hideError();
+
+            try {
+                // Базовые данные и таблица
+                const bootstrap = await fetchFPLAPI('bootstrap-static/');
+                const league = await fetchFPLAPI(`leagues-classic/${LEAGUE_ID}/standings/`);
+                
+                if (!league || !league.standings || !league.standings.results) throw new Error("Неверный формат ответа FPL");
+                
+                appState.currentGW = bootstrap.events.find(e => e.is_current)?.id || 1;
+                document.getElementById('gw-indicator').textContent = `GW: ${appState.currentGW}`;
+
+                const elementsMap = {};
+                bootstrap.elements.forEach(el => { elementsMap[el.id] = el.web_name; });
+
+                const newManagers = [];
+                const results = league.standings.results;
+
+                // Для каждого менеджера собираем полную историю и пики
+                await Promise.all(results.map(async (r) => {
+                    let mgr = createManagerTemplate(r.entry, r.player_name, r.entry_name);
+                    mgr.totalPoints = r.total;
+                    mgr.gwPoints = r.event_total;
+
+                    const hist = await fetchFPLAPI(`entry/${r.entry}/history/`);
+                    if (hist) {
+                        mgr.chips = hist.chips || [];
+                        
+                        // Строим историю
+                        hist.current.forEach(gw => {
+                            mgr.history.push({
+                                gw: gw.event,
+                                points: gw.points,
+                                rank: gw.overall_rank,
+                                cupPoints: 0, 
+                                rawGwPts: gw.points + gw.event_transfers_cost, // Чистые очки
+                                hitCost: gw.event_transfers_cost,
+                                benchPoints: gw.points_on_bench
+                            });
+                        });
+                        
+                        // Аггрегируем сезонные статы
+                        mgr.transferCount = hist.current.reduce((acc, curr) => acc + curr.event_transfers, 0);
+                        mgr.hitCost = hist.current.reduce((acc, curr) => acc + curr.event_transfers_cost, 0);
+                        const currHist = hist.current.find(h => h.event === appState.currentGW);
+                        if(currHist) mgr.benchPoints = currHist.points_on_bench;
+                    }
+
+                    // Текущие пики для кэпов и диффов
+                    const picksData = await fetchFPLAPI(`entry/${r.entry}/event/${appState.currentGW}/picks/`);
+                    if (picksData && picksData.picks) {
+                        mgr.picks = picksData.picks.map(p => elementsMap[p.element] || "Unknown");
+                        const cap = picksData.picks.find(p => p.is_captain);
+                        const vice = picksData.picks.find(p => p.is_vice_captain);
+                        if (cap) {
+                            mgr.captain = elementsMap[cap.element] || 'N/A';
+                            mgr.multiplier = cap.multiplier;
+                        }
+                        if (vice) mgr.viceCaptain = elementsMap[vice.element] || 'N/A';
+                    }
+                    
+                    newManagers.push(mgr);
+                }));
+
+                // Нормализация Кубка Азамата (ретроспективный подсчет)
+                normalizeAzamatCup(newManagers);
+
+                appState.managers = newManagers;
+                appState.dataLoaded = true;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+                
+                uiSetStatus('🟢 LIVE', 'text-[#00ff85]');
+                renderAll();
+
+            } catch(e) {
+                uiShowError(e.message);
+                if (appState.dataLoaded) uiSetStatus('🟡 Offline (Cache)', 'text-amber-500');
+            } finally {
+                syncIcon.classList.remove('fa-spin');
+            }
+        }
+
+        // Математика Кубка Азамата
+        function normalizeAzamatCup(managers) {
+            appState.gameweeks = [];
+            for (let gw = 1; gw <= appState.currentGW; gw++) {
+                // Вытаскиваем стату каждого на этом GW
+                let gwStats = managers.map(m => {
+                    const h = m.history.find(x => x.gw === gw);
+                    return { id: m.id, rawPts: h ? h.rawGwPts : 0, histRef: h };
+                }).filter(m => m.histRef); // Отсекаем если нет данных
+
+                // Сортируем по сырым очкам
+                gwStats.sort((a, b) => b.rawPts - a.rawPts);
+                
+                let pointsMap = {};
+                gwStats.forEach((m, idx) => {
+                    let pts = Math.max(10 - idx, 1);
+                    m.histRef.cupPoints = pts; 
+                    pointsMap[m.id] = pts;
+                });
+                appState.gameweeks.push({ gw, pointsMap });
+            }
+        }
+
+
+        // 5. RENDERING PIPELINE
+        function renderAll() {
+            if (!appState.managers || appState.managers.length === 0) return;
+            
+            // Сортировка по дефолту (General Rank)
+            appState.managers.sort((a,b) => b.totalPoints - a.totalPoints);
+            
+            updateManagerSelects();
+            renderDashboard();
+            renderAzamatCup();
+            renderDifferentials();
+            renderCharts('all');
+            renderTransfers();
+            renderChips();
+            renderCaptains();
+            renderHallOfFame();
+        }
+
+        function updateManagerSelects() {
+            const select = document.getElementById('chart-manager-select');
+            select.innerHTML = '<option value="all">Все менеджеры</option>';
+            appState.managers.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = escapeHTML(m.name);
+                select.appendChild(opt);
+            });
+        }
+
+        // TAB 1: Дашборд
+        function renderDashboard() {
+            if (!appState.managers.length) return;
+            const kpiContainer = document.getElementById('kpi-container');
+            const leader = appState.managers[0];
+            
+            // Находим лидера тура
+            let gwLeader = [...appState.managers].sort((a,b) => b.gwPoints - a.gwPoints)[0];
+            let avgGW = (appState.managers.reduce((acc, m) => acc + m.gwPoints, 0) / appState.managers.length).toFixed(1);
+            let maxGap = appState.managers.length > 1 ? appState.managers[0].totalPoints - appState.managers[appState.managers.length-1].totalPoints : 0;
+
+            kpiContainer.innerHTML = `
+                <div class="glass-panel p-4"><p class="text-[10px] uppercase text-slate-400">Current GW</p><p class="text-xl font-bold text-white">${appState.currentGW}</p></div>
+                <div class="glass-panel p-4 border-l-2 border-l-[#00ff85]"><p class="text-[10px] uppercase text-slate-400">Лидер Лиги</p><p class="text-xl font-bold text-white truncate">${escapeHTML(leader.name)}</p></div>
+                <div class="glass-panel p-4"><p class="text-[10px] uppercase text-slate-400">Ср. балл тура</p><p class="text-xl font-bold text-white">${avgGW}</p></div>
+                <div class="glass-panel p-4"><p class="text-[10px] uppercase text-slate-400">Макс отрыв</p><p class="text-xl font-bold text-rose-400">${maxGap} pts</p></div>
+            `;
+
+            const tbody = document.getElementById('standings-tbody');
+            const gTbody = document.getElementById('gap-matrix-body');
+            const gHead = document.getElementById('gap-matrix-head');
+            
+            let tHtml = '', ghHtml = '<tr><th class="p-2"></th>', gbHtml = '';
+
+            appState.managers.forEach((m, i) => {
+                // Table logic
+                const prevHist = m.history.find(h => h.gw === appState.currentGW - 1);
+                let rankChange = '—';
+                let rankColor = 'text-slate-400';
+                
+                // Gap logic
+                let gapToLeader = leader.totalPoints - m.totalPoints;
+                let gapDisplay = i === 0 ? '—' : `-${gapToLeader}`;
+
+                tHtml += `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="p-3 pl-4 font-bold ${i===0 ? 'text-[#00ff85]' : 'text-slate-400'}">${i+1}</td>
+                        <td class="p-3"><div class="font-bold text-white">${escapeHTML(m.name)}</div><div class="text-[10px] text-slate-400">${escapeHTML(m.team)}</div></td>
+                        <td class="p-3 text-center text-[#00d9ff] font-bold">${m.gwPoints}</td>
+                        <td class="p-3 text-center font-black">${m.totalPoints}</td>
+                        <td class="p-3 text-center text-xs font-bold ${rankColor}">${rankChange}</td>
+                        <td class="p-3 text-center text-xs text-rose-400">${gapDisplay}</td>
+                    </tr>
+                `;
+
+                // Gap Matrix Logic
+                ghHtml += `<th class="p-2 text-slate-400">#${i+1}</th>`;
+                gbHtml += `<tr class="hover:bg-white/5"><td class="p-2 font-bold text-left text-xs">${escapeHTML(m.name.split(' ')[0])}</td>`;
+                
+                appState.managers.forEach((m2, j) => {
+                    let diff = m.totalPoints - m2.totalPoints;
+                    if (i === j) gbHtml += `<td class="p-2 text-slate-600">-</td>`;
+                    else if (diff < 0) gbHtml += `<td class="p-2 text-rose-400">${diff}</td>`;
+                    else gbHtml += `<td class="p-2 text-[#00ff85]">+${diff}</td>`;
+                });
+                gbHtml += `</tr>`;
+            });
+
+            tbody.innerHTML = tHtml;
+            gHead.innerHTML = ghHtml + "</tr>";
+            gTbody.innerHTML = gbHtml;
+        }
+
+        // TAB 2: Азамат
+        function renderAzamatCup() {
+            const tbody = document.getElementById('azamat-tbody');
+            // Сортируем менеджеров по общему баллу Азамата
+            let cupStandings = appState.managers.map(m => {
+                let totalCup = m.history.reduce((sum, h) => sum + (h.cupPoints || 0), 0);
+                let currentGWHist = m.history.find(h => h.gw === appState.currentGW);
+                return {
+                    name: m.name,
+                    rawGw: currentGWHist ? currentGWHist.rawGwPts : 0,
+                    gwCup: currentGWHist ? currentGWHist.cupPoints : 0,
+                    totalCup: totalCup
+                };
+            }).sort((a,b) => b.totalCup - a.totalCup);
+
+            tbody.innerHTML = cupStandings.map((m, i) => `
+                <tr class="hover:bg-white/5">
+                    <td class="p-3 pl-4 font-bold">${i+1}</td>
+                    <td class="p-3 font-bold text-white">${escapeHTML(m.name)}</td>
+                    <td class="p-3 text-center text-slate-400">${m.rawGw}</td>
+                    <td class="p-3 text-center text-[#00ff85]">+${m.gwCup}</td>
+                    <td class="p-3 text-center font-black text-[#00d9ff]">${m.totalCup} pts</td>
+                </tr>
+            `).join('');
+
+            // Chart
+            const labels = Array.from({length: appState.currentGW}, (_, i) => `GW${i+1}`);
+            const colors = ['#00ff85', '#00d9ff', '#ff0055', '#ffaa00', '#aa00ff', '#ffffff', '#0055ff', '#aaff00'];
+            
+            const datasets = appState.managers.map((m, i) => {
+                let sum = 0;
+                const data = labels.map((_, idx) => {
+                    const h = m.history.find(x => x.gw === idx + 1);
+                    sum += h ? h.cupPoints : 0;
+                    return sum;
+                });
+                return { label: escapeHTML(m.name), data, borderColor: colors[i%colors.length], tension: 0.3, fill: false };
+            });
+
+            createChart('azamatChart', 'line', { labels, datasets }, { 
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: { x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } } }
+            });
+        }
+
+        // TAB 3: Дифференциалы
+        function renderDifferentials() {
+            const container = document.getElementById('differentials-container');
+            if (appState.currentGW === 1 && (!appState.managers[0].picks || !appState.managers[0].picks.length)) {
+                container.innerHTML = '<p class="text-sm text-slate-400">Недостаточно данных для расчёта текущего тура (Пики скрыты до дедлайна).</p>';
                 return;
             }
 
-            const results = leagueData.standings.results;
-            
-            // Качаем детали (скамейка, штрафы) для каждого реального участника
-            await Promise.all(results.map(async (r) => {
-                let manager = {
-                    id: r.entry,
-                    name: r.player_name,
-                    team: r.entry_name,
-                    pts: r.total,
-                    gwPts: r.event_total,
-                    grossGwPts: r.event_total, 
-                    transfers: 0,
-                    hitCost: 0,
-                    bench: 0,
-                    capPts: 0
-                };
+            // Агрегация пиков
+            let ownership = {};
+            appState.managers.forEach(m => {
+                (m.picks || []).forEach(player => {
+                    if (!ownership[player]) ownership[player] = [];
+                    ownership[player].push(m.name);
+                });
+            });
 
-                const histData = await fetchFPLData(`entry/${r.entry}/history/`);
-                if (histData && histData.current && histData.current.length > 0) {
-                    const currEvent = histData.current[histData.current.length - 1];
-                    currentGW = currEvent.event;
-                    manager.hitCost = currEvent.event_transfers_cost || 0;
-                    manager.grossGwPts = manager.gwPts + manager.hitCost;
-                    manager.bench = currEvent.points_on_bench || 0;
-                    manager.transfers = currEvent.event_transfers || 0;
+            // Находим реальные дифференциалы (владеют 1-2 человека)
+            let diffHtml = '<table class="w-full text-sm text-left border-collapse"><thead class="bg-black/40 text-xs uppercase text-slate-400 border-b border-white/10"><tr><th class="p-3 pl-4">Игрок</th><th class="p-3 text-center">Owned By</th><th class="p-3 text-center">Владельцы</th></tr></thead><tbody class="divide-y divide-white/5">';
+            
+            Object.keys(ownership).sort((a,b) => ownership[a].length - ownership[b].length).forEach(player => {
+                let count = ownership[player].length;
+                if (count > 0 && count <= 3) { // Показываем только диффы
+                    diffHtml += `<tr class="hover:bg-white/5">
+                        <td class="p-3 pl-4 font-bold text-white">${escapeHTML(player)}</td>
+                        <td class="p-3 text-center text-amber-400 font-bold">${count}/${appState.managers.length}</td>
+                        <td class="p-3 text-center text-xs text-slate-300">${escapeHTML(ownership[player].join(', '))}</td>
+                    </tr>`;
                 }
-
-                currentManagers.push(manager);
-            }));
-
-            document.getElementById("sync-icon").classList.remove("fa-spin");
-            document.getElementById("data-status-badge").className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-fpl-green text-[#37003c] border border-fpl-green";
-            document.getElementById("data-status-text").innerText = "🟢 LIVE: Данные загружены";
-            
-            renderAll();
+            });
+            diffHtml += '</tbody></table>';
+            container.innerHTML = diffHtml;
         }
 
-        function renderAll() {
-            if(!currentManagers.length) return;
-            currentManagers.sort((a,b) => b.pts - a.pts);
-            
-            renderStandings();
-            renderGapMatrix();
-            renderAzamatCup();
-            renderH2H();
-            renderNominations();
-        }
+        // TAB 4: Графики (Очки и Ранки)
+        function renderCharts(filterId) {
+            let managers = appState.managers;
+            if (filterId !== 'all') managers = managers.filter(m => m.id == filterId);
 
-        function renderStandings() {
-            const tbody = document.getElementById("standings-tbody");
-            tbody.innerHTML = "";
-            currentManagers.forEach((m, idx) => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-white/5 transition-colors">
-                        <td class="p-3 pl-4 font-bold ${idx===0 ? 'text-fpl-green' : 'text-slate-400'}">${idx+1}</td>
-                        <td class="p-3"><div class="font-bold">${m.name}</div><div class="text-xs text-slate-400">${m.team}</div></td>
-                        <td class="p-3 text-center text-fpl-cyan font-bold">+${m.gwPts}</td>
-                        <td class="p-3 text-center font-black">${m.pts}</td>
-                    </tr>
-                `;
+            const labels = Array.from({length: appState.currentGW}, (_, i) => `GW${i+1}`);
+            const colors = ['#00ff85', '#00d9ff', '#ff0055', '#ffaa00', '#aa00ff', '#ffffff', '#0055ff', '#aaff00'];
+
+            // GW Points
+            const ptsDatasets = managers.map((m, i) => {
+                const data = labels.map((_, idx) => { const h = m.history.find(x => x.gw === idx+1); return h ? h.points : 0; });
+                return { label: escapeHTML(m.name), data, borderColor: colors[i%colors.length], tension: 0.3 };
+            });
+            createChart('pointsChart', 'line', { labels, datasets: ptsDatasets }, { 
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' } } }
+            });
+
+            // Ranks (inverted Y axis)
+            const rankDatasets = managers.map((m, i) => {
+                const data = labels.map((_, idx) => { const h = m.history.find(x => x.gw === idx+1); return h ? h.rank : null; });
+                return { label: escapeHTML(m.name), data, borderColor: colors[i%colors.length], tension: 0.3 };
+            });
+            createChart('rankChart', 'line', { labels, datasets: rankDatasets }, { 
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' } }, y: { reverse: true, grid: { color: 'rgba(255,255,255,0.05)' } } }
             });
         }
 
-        function renderGapMatrix() {
-            const head = document.getElementById("gap-matrix-head");
-            const body = document.getElementById("gap-matrix-body");
-            head.innerHTML = "<tr><th class='p-2'></th>" + currentManagers.map((_, i) => `<th class='p-2 text-slate-400'>#${i+1}</th>`).join('') + "</tr>";
+        // TAB 5: Трансферы
+        function renderTransfers() {
+            const tbody = document.getElementById('transfers-tbody');
+            tbody.innerHTML = appState.managers.map(m => {
+                // Если нет трансферов - ROI N/A
+                let roi = m.transferCount === 0 ? 'N/A' : ((m.totalPoints / (m.transferCount * 4 || 1)).toFixed(1)); 
+                return `
+                <tr class="hover:bg-white/5">
+                    <td class="p-3 pl-4 font-bold text-white">${escapeHTML(m.name)}</td>
+                    <td class="p-3 text-center">${m.transferCount}</td>
+                    <td class="p-3 text-center text-rose-400 font-bold">-${m.hitCost} pts</td>
+                    <td class="p-3 text-center text-slate-400">${roi}</td>
+                </tr>
+            `}).join('');
+        }
+
+        // TAB 6: Чипы
+        function renderChips() {
+            const thead = document.getElementById('chips-head');
+            const tbody = document.getElementById('chips-tbody');
             
-            let bodyHTML = "";
-            currentManagers.forEach((m1, i) => {
-                bodyHTML += `<tr><td class='p-2 font-bold text-left'>${m1.name.split(' ')[0]}</td>`;
-                currentManagers.forEach((m2, j) => {
-                    if (i === j) {
-                        bodyHTML += `<td class='p-2 text-slate-600'>-</td>`;
-                    } else if (i > j) {
-                        bodyHTML += `<td class='p-2 text-rose-400'>${m1.pts - m2.pts}</td>`;
-                    } else {
-                        bodyHTML += `<td class='p-2 text-fpl-green'>+${m2.pts - m1.pts}</td>`;
-                    }
+            // Собираем все сыгранные туры для заголовка (оптимизация до 5 последних, если много)
+            let gws = Array.from({length: appState.currentGW}, (_, i) => i+1);
+            
+            thead.innerHTML = `<tr class="bg-black/40 text-xs uppercase text-slate-400 border-b border-white/10"><th class="p-3 pl-4 text-left">Менеджер</th>` + gws.map(g => `<th class="p-3 text-center">GW${g}</th>`).join('') + `</tr>`;
+
+            tbody.innerHTML = appState.managers.map(m => {
+                let row = `<tr class="hover:bg-white/5"><td class="p-3 pl-4 font-bold text-left text-white">${escapeHTML(m.name)}</td>`;
+                gws.forEach(g => {
+                    let chip = m.chips.find(c => c.event === g);
+                    let badge = chip ? `<span class="bg-[#00d9ff]/20 text-[#00d9ff] px-2 py-0.5 rounded text-[10px] font-bold">${chip.name}</span>` : '<span class="text-slate-600">-</span>';
+                    row += `<td class="p-3 text-center">${badge}</td>`;
                 });
-                bodyHTML += `</tr>`;
-            });
-            body.innerHTML = bodyHTML;
+                return row + `</tr>`;
+            }).join('');
         }
 
-        function renderAzamatCup() {
-            const tbody = document.getElementById("azamat-tbody");
-            tbody.innerHTML = "";
-            let cupStandings = [...currentManagers].sort((a,b) => b.grossGwPts - a.grossGwPts);
-            
-            cupStandings.forEach((m, idx) => {
-                let cupPts = Math.max(10 - idx, 1);
-                tbody.innerHTML += `
-                    <tr class="hover:bg-white/5">
-                        <td class="p-3 pl-4">${idx+1}</td>
-                        <td class="p-3 font-bold">${m.name}</td>
-                        <td class="p-3 text-center">${m.grossGwPts}</td>
-                        <td class="p-3 text-center font-bold text-fpl-cyan">${cupPts} pts</td>
-                    </tr>
-                `;
-            });
+        // TAB 7: Капитаны
+        function renderCaptains() {
+            const tbody = document.getElementById('captains-tbody');
+            if (!appState.managers[0].picks || appState.managers[0].picks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Недостаточно данных для расчёта (Пики скрыты)</td></tr>';
+                return;
+            }
+            tbody.innerHTML = appState.managers.map(m => {
+                let capClass = m.multiplier > 2 ? 'text-amber-400' : 'text-[#00ff85]';
+                return `
+                <tr class="hover:bg-white/5">
+                    <td class="p-3 pl-4 font-bold text-white">${escapeHTML(m.name)}</td>
+                    <td class="p-3 text-center font-bold ${capClass}">${escapeHTML(m.captain)}</td>
+                    <td class="p-3 text-center text-slate-400">${escapeHTML(m.viceCaptain)}</td>
+                    <td class="p-3 text-center text-xs">x${m.multiplier}</td>
+                </tr>
+            `}).join('');
         }
 
-        function renderH2H() {
-            const head = document.getElementById("h2h-matrix-head");
-            const body = document.getElementById("h2h-matrix-body");
-            
-            head.innerHTML = "<tr><th class='p-2 text-left text-slate-400'>GW Pts</th>" + currentManagers.map((m) => `<th class='p-2 text-slate-300'>${m.name.split(' ')[0]}</th>`).join('') + "</tr>";
+        // TAB 8: Номинации
+        function renderHallOfFame() {
+            const grid = document.getElementById('nominations-grid');
+            if (appState.currentGW < 2) {
+                grid.innerHTML = '<div class="text-slate-400">Недостаточно данных для номинаций. Проведите минимум 2 тура.</div>';
+                return;
+            }
 
-            let bodyHTML = "";
-            currentManagers.forEach((m1, i) => {
-                bodyHTML += `<tr class="hover:bg-white/5"><td class='p-2 font-bold text-left'>${m1.name.split(' ')[0]} <span class="text-xs text-fpl-cyan">(${m1.gwPts})</span></td>`;
-                currentManagers.forEach((m2, j) => {
-                    if (i === j) {
-                        bodyHTML += `<td class='p-2 bg-black/40 text-slate-600'>-</td>`;
-                    } else if (m1.gwPts > m2.gwPts) {
-                        bodyHTML += `<td class='p-2 text-fpl-green font-bold'>В (${m1.gwPts}:${m2.gwPts})</td>`;
-                    } else if (m1.gwPts < m2.gwPts) {
-                        bodyHTML += `<td class='p-2 text-rose-400 font-bold'>П (${m1.gwPts}:${m2.gwPts})</td>`;
-                    } else {
-                        bodyHTML += `<td class='p-2 text-amber-400 font-bold'>Н (${m1.gwPts}:${m2.gwPts})</td>`;
-                    }
-                });
-                bodyHTML += `</tr>`;
-            });
-            body.innerHTML = bodyHTML;
-        }
+            const getMetric = (sortFn, valFn) => {
+                let sorted = [...appState.managers].sort(sortFn);
+                return { winner: sorted[0].name, val: valFn(sorted[0]) };
+            };
 
-        function renderNominations() {
-            const grid = document.getElementById("nominations-grid");
-            grid.innerHTML = "";
-            
-            const isEarly = currentGW < 3; 
-            const isRoninReady = currentGW >= 20;
+            const bench = getMetric((a,b) => b.benchPoints - a.benchPoints, m => `${m.benchPoints} pts`);
+            const xpts = getMetric((a,b) => b.hitCost - a.hitCost, m => `-${m.hitCost} pts`);
 
             const noms = [
-                { title: "👑 Батя Лиги", desc: "Лидер общего зачета", val: `${currentManagers[0].pts} pts`, winner: currentManagers[0].name },
-                { title: "📉 Бумажные руки", desc: "Продажа игрока перед его хет-триком", val: isEarly ? "Пока пусто" : "Ждем фейлов", winner: isEarly ? "-" : "TBD" },
-                { title: "⛩️ Путь Ронина", desc: "Чемпион второго круга (с 20 тура)", val: isRoninReady ? "Расчет..." : "С 20 тура", winner: "-" },
-                { title: "🪵 Деревянная Скамейка", desc: "Максимум очков в запасе", val: `${[...currentManagers].sort((a,b)=>b.bench-a.bench)[0].bench} pts`, winner: [...currentManagers].sort((a,b)=>b.bench-a.bench)[0].name },
-                { title: "🎯 Охотник за Скальпами", desc: "Дифференциалы <10%", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
-                { title: "💸 Трансферный Волк", desc: "Лучший PnL по трансферам", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
-                { title: "📊 Инвестор Года", desc: "Очки на миллион (ROI)", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
-                { title: "👑 Капитанская Альфа", desc: "Максимум от кэпов", val: `${[...currentManagers].sort((a,b)=>b.capPts-a.capPts)[0].capPts} pts`, winner: [...currentManagers].sort((a,b)=>b.capPts-a.capPts)[0].name },
-                { title: "🎢 Мастер Дисперсии", desc: "Самые нестабильные очки", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
-                { title: "🌧️ Главный Неудачник", desc: "Меньше всего очков относительно xP", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" },
-                { title: "🎯 Идеальная Фильтрация", desc: "Минимум очков на банке", val: `${[...currentManagers].sort((a,b)=>a.bench-b.bench)[0].bench} pts`, winner: [...currentManagers].sort((a,b)=>a.bench-b.bench)[0].name },
-                { title: "🪙 Герои Дешевых Слотов", desc: "Очки от игроков до £5.0M", val: isEarly ? "Пока пусто" : "Считаем", winner: "-" }
+                { t: "👑 Батя Лиги", d: "Первое место в таблице", w: appState.managers[0].name, v: `${appState.managers[0].totalPoints} pts` },
+                { t: "🪵 Деревянная Скамейка", d: "Максимум очков в запасе (Current GW)", w: bench.winner, v: bench.val },
+                { t: "📉 Главный Спонсор ФПЛ", d: "Максимум штрафов за сезон", w: xpts.winner, v: xpts.val },
+                { t: "🎯 Идеальная Фильтрация", d: "Минимум штрафов", w: getMetric((a,b) => a.hitCost - b.hitCost, m=>0).winner, v: `0 pts` }
             ];
 
-            noms.forEach(n => {
-                grid.innerHTML += `
-                    <div class="glass-panel p-4 rounded-xl flex flex-col justify-between border-t-2 border-fpl-cyan">
-                        <div>
-                            <h4 class="font-bold text-white text-sm">${n.title}</h4>
-                            <p class="text-[10px] text-slate-400 mt-1">${n.desc}</p>
-                        </div>
-                        <div class="mt-3 pt-2 border-t border-white/10 flex justify-between items-end">
-                            <span class="font-black text-fpl-green text-sm">${n.winner}</span>
-                            <span class="bg-black/50 text-slate-300 text-[10px] px-2 py-1 rounded font-bold">${n.val}</span>
-                        </div>
+            grid.innerHTML = noms.map(n => `
+                <div class="glass-panel p-4 flex flex-col justify-between border-t-2 border-[#00d9ff]">
+                    <div><h4 class="font-bold text-white text-sm">${escapeHTML(n.t)}</h4><p class="text-[10px] text-slate-400 mt-1">${escapeHTML(n.d)}</p></div>
+                    <div class="mt-3 pt-2 border-t border-white/10 flex justify-between items-end">
+                        <span class="font-black text-[#00ff85] text-sm">${escapeHTML(n.w)}</span>
+                        <span class="bg-black/50 text-slate-300 text-[10px] px-2 py-1 rounded font-bold">${escapeHTML(n.v)}</span>
                     </div>
-                `;
+                </div>
+            `).join('');
+        }
+
+        // TAB 9: AI Аналитик
+        function initAI() {
+            document.getElementById('btn-ai-roast').addEventListener('click', () => generateAIResponse('roast'));
+            document.getElementById('btn-ai-praise').addEventListener('click', () => generateAIResponse('praise'));
+            document.getElementById('btn-ai-send').addEventListener('click', () => {
+                const input = document.getElementById('ai-input');
+                if (input.value.trim() === '') return;
+                appendChatMessage('Вы', input.value, 'text-[#37003c] bg-[#00d9ff]');
+                input.value = '';
+                setTimeout(() => generateAIResponse('custom'), 600);
             });
         }
 
-        function aiPrompt(type) {
-            const chat = document.getElementById("ai-chat");
+        function generateAIResponse(type) {
+            if(!appState.managers.length) return;
             let msg = "";
-            if(!currentManagers.length) return;
-            
+            const leader = appState.managers[0];
+            const loser = appState.managers[appState.managers.length - 1];
+
             if (type === 'roast') {
-                const loser = currentManagers[currentManagers.length-1];
-                msg = `Слушай, ${loser.name}, твои ${loser.pts} очков — это боль. Скамейка собрала больше, чем твой капитан! Меняй тактику, братишка.`;
+                msg = `По фактам: ${escapeHTML(loser.name)}, твоя команда разгоняется медленнее, чем китайская Kia K3. ${loser.benchPoints > 0 ? `А скамейка маринует ${loser.benchPoints} очков. ` : ''} Собирай состав заново.`;
+            } else if (type === 'praise') {
+                msg = `Батя в здании! ${escapeHTML(leader.name)} сидит на троне с ${leader.totalPoints} очками. Грамотный выбор кэпа, но расслабляться рано.`;
             } else {
-                const winner = currentManagers[0];
-                msg = `Респект бате! ${winner.name} сейчас на троне с ${winner.pts} очками. Учитесь, пока он раздает стиль!`;
+                msg = `Проанализировал таблицу. Разрыв между 1 и последним местом — ${leader.totalPoints - loser.totalPoints} очков. Обрати внимание на дифференциалы, чтобы догнать лидера.`;
             }
-            
-            chat.innerHTML += `<div class="text-slate-300 text-sm bg-white/10 p-3 rounded-xl border border-white/10 my-2 self-end ml-auto w-3/4"><strong>AI:</strong> ${msg}</div>`;
+            appendChatMessage('AI', msg, 'text-slate-300 bg-white/10');
+        }
+
+        function appendChatMessage(sender, text, styleClass) {
+            const chat = document.getElementById('ai-chat');
+            const wrap = document.createElement('div');
+            wrap.className = `text-sm p-3 rounded-xl border border-white/10 inline-block w-3/4 mb-2 ${sender === 'Вы' ? 'ml-auto text-right' : ''} ${styleClass}`;
+            wrap.innerHTML = `<strong>${escapeHTML(sender)}:</strong> ${escapeHTML(text)}`;
+            chat.appendChild(wrap);
             chat.scrollTop = chat.scrollHeight;
-        }
-
-        function aiCustom() {
-            const input = document.getElementById("ai-input");
-            if(input.value.trim() === "") return;
-            const chat = document.getElementById("ai-chat");
-            
-            chat.innerHTML += `<div class="text-[#37003c] text-sm bg-fpl-cyan p-3 rounded-xl border border-fpl-cyan my-2 w-3/4"><strong>Вы:</strong> ${input.value}</div>`;
-            input.value = "";
-            
-            setTimeout(() => {
-                chat.innerHTML += `<div class="text-slate-300 text-sm bg-white/10 p-3 rounded-xl border border-white/10 my-2 ml-auto w-3/4"><strong>AI:</strong> Сезон только начался. Анализировать тренды рано, но матрица отрывов уже не врет!</div>`;
-                chat.scrollTop = chat.scrollHeight;
-            }, 600);
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
-            document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
-            document.getElementById(tabId).classList.remove("hidden");
-            event.currentTarget.classList.add("active");
         }
     </script>
 </body>
